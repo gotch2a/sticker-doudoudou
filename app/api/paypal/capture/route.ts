@@ -55,6 +55,17 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    // Si la commande est déjà payée, ne pas renvoyer d'emails
+    if (order.payment_status === 'paid') {
+      console.log('⚠️ Commande déjà payée, pas de nouvel email:', orderNumber)
+      return NextResponse.json({
+        success: true,
+        captureId: capture.id,
+        orderNumber: orderNumber,
+        message: 'Paiement déjà confirmé'
+      })
+    }
+    
     // Mettre à jour le statut de paiement
     await OrderService.updatePaymentStatus(order.id, 'paid', paypalOrderId)
     

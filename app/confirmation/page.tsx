@@ -21,6 +21,7 @@ export default function ConfirmationPage() {
   const isDemo = searchParams.get('demo') === 'true'
   const [confetti, setConfetti] = useState(true)
   const [paymentStatus, setPaymentStatus] = useState<'processing' | 'success' | 'error'>('processing')
+  const [captureInProgress, setCaptureInProgress] = useState(false)
 
   useEffect(() => {
     // Mode démo : succès immédiat
@@ -29,18 +30,21 @@ export default function ConfirmationPage() {
       setPaymentStatus('success')
     }
     // Capturer le paiement PayPal si on vient de PayPal
-    else if (paypalToken && orderId) {
+    else if (paypalToken && orderId && !captureInProgress) {
       capturePayPalPayment()
-    } else {
+    } else if (!paypalToken) {
       setPaymentStatus('success')
     }
     
     // Arrêter les confettis après 3 secondes
     const timer = setTimeout(() => setConfetti(false), 3000)
     return () => clearTimeout(timer)
-  }, [paypalToken, orderId, isDemo])
+  }, [paypalToken, orderId, isDemo, captureInProgress])
 
   const capturePayPalPayment = async () => {
+    if (captureInProgress) return // Éviter les appels multiples
+    
+    setCaptureInProgress(true)
     try {
       const response = await fetch('/api/paypal/capture', {
         method: 'POST',
@@ -61,6 +65,8 @@ export default function ConfirmationPage() {
     } catch (error) {
       console.error('Erreur capture PayPal:', error)
       setPaymentStatus('error')
+    } finally {
+      setCaptureInProgress(false)
     }
   }
 
