@@ -5,10 +5,16 @@ import { Resend } from 'resend'
 // Initialisation de Resend
 const getResend = () => {
   const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) {
+  if (!apiKey || apiKey === 'votre_cle_resend_optionnelle') {
     throw new Error('RESEND_API_KEY is not configured')
   }
   return new Resend(apiKey)
+}
+
+// Mode démo pour les emails
+const isDemoMode = () => {
+  const apiKey = process.env.RESEND_API_KEY
+  return !apiKey || apiKey === 'votre_cle_resend_optionnelle'
 }
 
 // Types pour les données d'email
@@ -27,6 +33,16 @@ interface OrderData {
 // Template d'email pour le client
 export async function sendClientConfirmationEmail(orderData: OrderData) {
   try {
+    // Mode démo si Resend n'est pas configuré
+    if (isDemoMode()) {
+      console.log('📧 MODE DÉMO - Email client simulé:')
+      console.log(`  ✉️  Destinataire: ${orderData.email}`)
+      console.log(`  📝 Sujet: ✅ Commande confirmée - ${orderData.orderNumber}`)
+      console.log(`  💰 Montant: ${orderData.totalAmount.toFixed(2)} €`)
+      console.log(`  🎯 Pour activer les vrais emails, configurez RESEND_API_KEY dans .env.local`)
+      return { success: true, emailId: 'demo_client_' + Date.now() }
+    }
+
     const resend = getResend()
     
     const { data, error } = await resend.emails.send({
@@ -147,8 +163,22 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
 // Template d'email pour l'artiste
 export async function sendArtistNotificationEmail(orderData: OrderData) {
   try {
-    const resend = getResend()
     const artistEmail = process.env.ARTIST_EMAIL || 'artiste@stickerdoudou.fr'
+    
+    // Mode démo si Resend n'est pas configuré
+    if (isDemoMode()) {
+      console.log('🎨 MODE DÉMO - Email artiste simulé:')
+      console.log(`  ✉️  Destinataire: ${artistEmail}`)
+      console.log(`  📝 Sujet: 🎨 Nouvelle commande à traiter - ${orderData.orderNumber}`)
+      console.log(`  👤 Client: ${orderData.email}`)
+      console.log(`  🐾 Doudou: ${orderData.petName} (${orderData.animalType})`)
+      console.log(`  👶 Pour: ${orderData.childName}`)
+      console.log(`  📊 ${orderData.numberOfSheets} planche(s) - ${orderData.totalAmount.toFixed(2)} €`)
+      console.log(`  🎯 Pour activer les vrais emails, configurez RESEND_API_KEY dans .env.local`)
+      return { success: true, emailId: 'demo_artist_' + Date.now() }
+    }
+
+    const resend = getResend()
     
     const { data, error } = await resend.emails.send({
       from: 'Sticker DOUDOU <noreply@stickerdoudou.fr>',
