@@ -12,22 +12,25 @@ import {
   Star
 } from 'lucide-react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 
 export default function ConfirmationPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const orderId = searchParams.get('order_id') || 'CMD-000000'
   const paypalToken = searchParams.get('token')
   const isDemo = searchParams.get('demo') === 'true'
   const [confetti, setConfetti] = useState(true)
   const [paymentStatus, setPaymentStatus] = useState<'processing' | 'success' | 'error'>('processing')
   const [captureInProgress, setCaptureInProgress] = useState(false)
+  const [redirectTimer, setRedirectTimer] = useState(5)
 
   useEffect(() => {
     // Mode démo : succès immédiat
     if (isDemo) {
       console.log('🎭 Mode démo activé - paiement simulé')
       setPaymentStatus('success')
+      startUpsellRedirect()
     }
     // Capturer le paiement PayPal si on vient de PayPal
     else if (paypalToken && orderId && !captureInProgress) {
@@ -59,6 +62,8 @@ export default function ConfirmationPage() {
 
       if (response.ok) {
         setPaymentStatus('success')
+        // Démarrer le timer pour redirection vers upsell
+        startUpsellRedirect()
       } else {
         setPaymentStatus('error')
       }
@@ -68,6 +73,25 @@ export default function ConfirmationPage() {
     } finally {
       setCaptureInProgress(false)
     }
+  }
+
+  const startUpsellRedirect = () => {
+    // Décompte de 5 secondes puis redirection vers upsell
+    const timer = setInterval(() => {
+      setRedirectTimer(prev => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          // Redirection vers page d'upsell avec paramètres
+          router.push(`/upsell?order=${orderId}&pet=doudou&child=enfant`)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  const skipToUpsell = () => {
+    router.push(`/upsell?order=${orderId}&pet=doudou&child=enfant`)
   }
 
   return (
@@ -255,6 +279,36 @@ export default function ConfirmationPage() {
           </p>
           <p className="text-sm text-gray-600 font-medium">— Sarah M., maman d'Emma</p>
         </motion.div>
+
+        {/* Redirection vers upsell */}
+        {paymentStatus === 'success' && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.2 }}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl p-6 mb-8"
+          >
+            <div className="text-center">
+              <h3 className="text-xl font-bold mb-2">
+                🎁 Offre spéciale vous attend !
+              </h3>
+              <p className="mb-4">
+                Complétez votre collection avec nos produits exclusifs à prix réduit
+              </p>
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <button 
+                  onClick={skipToUpsell}
+                  className="bg-white text-purple-600 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors"
+                >
+                  Voir les offres maintenant
+                </button>
+                <span className="text-white/80">
+                  ou redirection automatique dans {redirectTimer}s
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Actions */}
         <motion.div
