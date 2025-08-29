@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { 
   CheckCircle,
@@ -22,9 +22,9 @@ export default function ConfirmationPage() {
   const isDemo = searchParams.get('demo') === 'true'
   const [confetti, setConfetti] = useState(true)
   const [paymentStatus, setPaymentStatus] = useState<'processing' | 'success' | 'error'>('processing')
-  const [captureInProgress, setCaptureInProgress] = useState(false)
   const [orderDetails, setOrderDetails] = useState<any>(null)
   const [orderDetailsLoaded, setOrderDetailsLoaded] = useState(false)
+  const captureInProgressRef = useRef(false)
 
   useEffect(() => {
     // Mode démo : succès immédiat
@@ -34,7 +34,7 @@ export default function ConfirmationPage() {
       fetchOrderDetails()
     }
     // Capturer le paiement PayPal si on vient de PayPal
-    else if (paypalToken && orderId && !captureInProgress) {
+    else if (paypalToken && orderId && !captureInProgressRef.current) {
       capturePayPalPayment()
     } else if (!paypalToken) {
       setPaymentStatus('success')
@@ -49,9 +49,9 @@ export default function ConfirmationPage() {
   }, []) // Une seule fois au mount
 
   const capturePayPalPayment = async () => {
-    if (captureInProgress) return // Éviter les appels multiples
+    if (captureInProgressRef.current) return // Éviter les appels multiples
     
-    setCaptureInProgress(true)
+    captureInProgressRef.current = true
     try {
       const response = await fetch('/api/paypal/capture', {
         method: 'POST',
@@ -75,7 +75,7 @@ export default function ConfirmationPage() {
       console.error('Erreur capture PayPal:', error)
       setPaymentStatus('error')
     } finally {
-      setCaptureInProgress(false)
+      captureInProgressRef.current = false
     }
   }
 
