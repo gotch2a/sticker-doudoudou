@@ -23,14 +23,14 @@ export default function ConfirmationPage() {
   const [confetti, setConfetti] = useState(true)
   const [paymentStatus, setPaymentStatus] = useState<'processing' | 'success' | 'error'>('processing')
   const [captureInProgress, setCaptureInProgress] = useState(false)
-  const [redirectTimer, setRedirectTimer] = useState(5)
+  const [orderDetails, setOrderDetails] = useState<any>(null)
 
   useEffect(() => {
     // Mode démo : succès immédiat
     if (isDemo) {
       console.log('🎭 Mode démo activé - paiement simulé')
       setPaymentStatus('success')
-      startUpsellRedirect()
+      fetchOrderDetails()
     }
     // Capturer le paiement PayPal si on vient de PayPal
     else if (paypalToken && orderId && !captureInProgress) {
@@ -62,8 +62,8 @@ export default function ConfirmationPage() {
 
       if (response.ok) {
         setPaymentStatus('success')
-        // Démarrer le timer pour redirection vers upsell
-        startUpsellRedirect()
+        // Récupérer les détails de la commande
+        await fetchOrderDetails()
       } else {
         setPaymentStatus('error')
       }
@@ -75,24 +75,22 @@ export default function ConfirmationPage() {
     }
   }
 
-  const startUpsellRedirect = () => {
-    // Décompte de 5 secondes puis redirection vers upsell
-    const timer = setInterval(() => {
-      setRedirectTimer(prev => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          // Redirection vers page d'upsell avec paramètres
-          router.push(`/upsell?order=${orderId}&pet=doudou&child=enfant`)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
+
+
+  const fetchOrderDetails = async () => {
+    try {
+      const response = await fetch(`/api/orders/${orderId}`)
+      if (response.ok) {
+        const details = await response.json()
+        setOrderDetails(details)
+        console.log('📋 Détails commande récupérés:', details)
+      }
+    } catch (error) {
+      console.error('❌ Erreur récupération détails:', error)
+    }
   }
 
-  const skipToUpsell = () => {
-    router.push(`/upsell?order=${orderId}&pet=doudou&child=enfant`)
-  }
+
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 relative overflow-hidden">
@@ -280,30 +278,57 @@ export default function ConfirmationPage() {
           <p className="text-sm text-gray-600 font-medium">— Sarah M., maman d'Emma</p>
         </motion.div>
 
-        {/* Redirection vers upsell */}
-        {paymentStatus === 'success' && (
+        {/* Récapitulatif de la commande */}
+        {paymentStatus === 'success' && orderDetails && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 1.2 }}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl p-6 mb-8"
+            className="bg-white rounded-2xl p-6 mb-8 shadow-lg"
           >
-            <div className="text-center">
-              <h3 className="text-xl font-bold mb-2">
-                🎁 Offre spéciale vous attend !
-              </h3>
-              <p className="mb-4">
-                Complétez votre collection avec nos produits exclusifs à prix réduit
-              </p>
-              <div className="flex items-center justify-center gap-4 mb-4">
-                <button 
-                  onClick={skipToUpsell}
-                  className="bg-white text-purple-600 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors"
-                >
-                  Voir les offres maintenant
-                </button>
-                <span className="text-white/80">
-                  ou redirection automatique dans {redirectTimer}s
+            <h3 className="text-xl font-bold mb-4 text-gray-800">
+              📋 Récapitulatif de votre commande
+            </h3>
+            
+            <div className="space-y-3">
+              {/* Commande de base */}
+              <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-700">
+                  Stickers de {orderDetails.petName} ({orderDetails.numberOfSheets} planche(s))
+                </span>
+                <span className="font-medium">
+                  {(orderDetails.numberOfSheets * 12.90).toFixed(2)}€
+                </span>
+              </div>
+
+              {/* Upsells */}
+              {orderDetails.upsells && orderDetails.upsells.map((upsellId: string) => {
+                const upsellPrices: Record<string, {name: string, price: number}> = {
+                  'photo-premium': { name: 'Photo Doudou Premium', price: 29.90 },
+                  'livre-histoire': { name: 'Livre d\'Histoire Personnalisé', price: 24.90 },
+                  'planche-bonus': { name: '1 Planche Bonus', price: 4.90 }
+                }
+                const upsell = upsellPrices[upsellId]
+                if (!upsell) return null
+                
+                return (
+                  <div key={upsellId} className="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span className="text-gray-700 flex items-center gap-2">
+                      <span className="text-green-600">+</span>
+                      {upsell.name}
+                    </span>
+                    <span className="font-medium text-green-600">
+                      {upsell.price.toFixed(2)}€
+                    </span>
+                  </div>
+                )
+              })}
+
+              {/* Total */}
+              <div className="flex items-center justify-between py-3 text-lg font-bold border-t-2 border-gray-300">
+                <span className="text-gray-800">Total payé :</span>
+                <span className="text-green-600">
+                  {orderDetails.totalAmount.toFixed(2)}€
                 </span>
               </div>
             </div>

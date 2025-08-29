@@ -135,6 +135,14 @@ export default function PreCommandePage() {
         totalAmount: totalPrice
       }
 
+      console.log('📝 Données envoyées à l\'API:', {
+        ...orderData,
+        calculatedTotal: totalPrice,
+        basePrice,
+        upsellTotal,
+        selectedProducts
+      })
+
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {

@@ -56,7 +56,9 @@ export async function POST(request: NextRequest) {
       animalType: orderData.animalType,
       childName: orderData.childName,
       email: orderData.email,
-      numberOfSheets: orderData.numberOfSheets
+      numberOfSheets: orderData.numberOfSheets,
+      upsells: orderData.upsells,
+      totalAmount: orderData.totalAmount
     })
     
     // Validation des données
@@ -95,6 +97,13 @@ export async function POST(request: NextRequest) {
     }
     
     const totalAmount = orderData.totalAmount || (basePrice + upsellTotal)
+    
+    console.log('💰 Calcul des prix:', {
+      basePrice: basePrice.toFixed(2),
+      upsellTotal: upsellTotal.toFixed(2),
+      totalReceived: orderData.totalAmount,
+      finalTotal: totalAmount.toFixed(2)
+    })
 
     // Créer la commande dans Supabase avec le prix total
     const newOrder = await OrderService.createOrder({
