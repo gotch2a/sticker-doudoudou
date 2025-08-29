@@ -109,14 +109,34 @@ export default function CommandePage() {
     setIsLoading(true)
     
     try {
-      const result = await createOrder(formData)
-      
-      if (result.success && result.paymentUrl) {
-        // Redirection vers PayPal déjà gérée dans usePayPal
-        console.log('✅ Redirection vers PayPal en cours...')
-      } else {
-        setErrors({ submit: result.error || 'Erreur lors de la création de la commande' })
+      // Upload de la photo d'abord
+      let photoFileName = ''
+      if (formData.photo) {
+        const uploadFormData = new FormData()
+        uploadFormData.append('file', formData.photo)
+
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadFormData
+        })
+
+        if (uploadResponse.ok) {
+          const uploadResult = await uploadResponse.json()
+          photoFileName = uploadResult.filename
+        }
       }
+
+      // Redirection vers page d'upsell avec les données du formulaire
+      const params = new URLSearchParams({
+        petName: formData.petName,
+        animalType: formData.animalType,
+        childName: formData.childName,
+        email: formData.email,
+        numberOfSheets: formData.numberOfSheets.toString(),
+        ...(photoFileName && { photo: `/api/photos/${photoFileName}` })
+      })
+      
+      router.push(`/pre-commande?${params.toString()}`)
     } catch (error) {
       console.error('Erreur:', error)
       setErrors({ submit: 'Une erreur est survenue. Veuillez réessayer.' })
@@ -476,7 +496,7 @@ export default function CommandePage() {
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-2">
-                  Payer et envoyer à l'artiste
+                  Continuer ma commande
                   <ArrowRight className="w-5 h-5" />
                 </div>
               )}

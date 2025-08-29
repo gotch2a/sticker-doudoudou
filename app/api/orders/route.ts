@@ -35,12 +35,14 @@ interface OrderData {
   petName: string
   animalType: string
   childName: string
-  address: string
-  city: string
-  postalCode: string
+  address?: string
+  city?: string
+  postalCode?: string
   numberOfSheets: number
-  notes: string
+  notes?: string
   email: string
+  upsells?: string[]
+  totalAmount?: number
 }
 
 export async function POST(request: NextRequest) {
@@ -66,18 +68,47 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Créer la commande dans Supabase
+    // Calcul du prix avec upsells
+    const basePrice = orderData.numberOfSheets * 12.90
+    let upsellTotal = 0
+    let upsellDetails = ''
+    
+    if (orderData.upsells && orderData.upsells.length > 0) {
+      const upsellPrices: Record<string, number> = {
+        'photo-premium': 29.90,
+        'livre-histoire': 24.90,
+        'planche-bonus': 4.90
+      }
+      
+      const upsellNames: Record<string, string> = {
+        'photo-premium': 'Photo Doudou Premium',
+        'livre-histoire': 'Livre d\'Histoire Personnalisé',
+        'planche-bonus': '1 Planche Bonus'
+      }
+      
+      orderData.upsells.forEach(upsellId => {
+        if (upsellPrices[upsellId]) {
+          upsellTotal += upsellPrices[upsellId]
+          upsellDetails += `\n+ ${upsellNames[upsellId]}: ${upsellPrices[upsellId].toFixed(2)}€`
+        }
+      })
+    }
+    
+    const totalAmount = orderData.totalAmount || (basePrice + upsellTotal)
+
+    // Créer la commande dans Supabase avec le prix total
     const newOrder = await OrderService.createOrder({
       photo_url: orderData.photo,
       pet_name: orderData.petName,
       animal_type: orderData.animalType,
       child_name: orderData.childName,
       client_email: orderData.email,
-      address: orderData.address,
-      city: orderData.city,
-      postal_code: orderData.postalCode,
+      address: orderData.address || '',
+      city: orderData.city || '',
+      postal_code: orderData.postalCode || '',
       number_of_sheets: orderData.numberOfSheets,
-      notes: orderData.notes
+      notes: orderData.notes || '',
+      total_amount: totalAmount
     })
 
     console.log('✅ Commande créée en base:', newOrder.order_number, 'Total:', newOrder.total_amount, '€')
@@ -88,9 +119,10 @@ export async function POST(request: NextRequest) {
 📋 Doudou: ${orderData.petName} (${orderData.animalType})
 👶 Pour: ${orderData.childName}
 📧 Contact: ${orderData.email}
-📦 Planches: ${orderData.numberOfSheets}
-💰 Total: ${newOrder.total_amount}€
-📍 Adresse: ${orderData.address}, ${orderData.city} ${orderData.postalCode}
+📦 Planches: ${orderData.numberOfSheets} (${basePrice.toFixed(2)}€)
+${upsellDetails ? '🎁 PRODUITS BONUS:' + upsellDetails : ''}
+💰 TOTAL: ${totalAmount.toFixed(2)}€
+📍 Adresse: ${orderData.address || 'Non renseignée'}, ${orderData.city || ''} ${orderData.postalCode || ''}
 📝 Notes: ${orderData.notes || 'Aucune note'}
 🔗 Photo: ${orderData.photo}
 
@@ -127,7 +159,7 @@ export async function POST(request: NextRequest) {
               currency_code: 'EUR',
               value: newOrder.total_amount.toFixed(2)
             },
-            description: `Stickers DOUDOU - ${orderData.petName} pour ${orderData.childName}`
+            description: `Stickers DOUDOU - ${orderData.petName} pour ${orderData.childName}${orderData.upsells && orderData.upsells.length > 0 ? ` + ${orderData.upsells.length} bonus` : ''}`
           }
         ],
         application_context: {

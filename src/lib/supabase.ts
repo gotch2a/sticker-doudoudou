@@ -93,10 +93,11 @@ export class OrderService {
     postal_code: string
     number_of_sheets: number
     notes?: string
+    total_amount?: number
   }) {
     const orderNumber = `CMD-${Date.now()}`
     const pricePerSheet = 12.90
-    const totalAmount = orderData.number_of_sheets * pricePerSheet
+    const totalAmount = orderData.total_amount || (orderData.number_of_sheets * pricePerSheet)
 
     const { data, error } = await supabase
       .from('orders')
