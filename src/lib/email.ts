@@ -163,7 +163,9 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
 // Template d'email pour l'artiste
 export async function sendArtistNotificationEmail(orderData: OrderData) {
   try {
-    const artistEmail = process.env.ARTIST_EMAIL || 'artiste@stickerdoudou.fr'
+    // En mode test Resend, on peut seulement envoyer à notre propre email
+    // Donc l'artiste recevra sur l'email du client temporairement
+    const artistEmail = process.env.ARTIST_EMAIL || orderData.email
     
     // Mode démo si Resend n'est pas configuré
     if (isDemoMode()) {

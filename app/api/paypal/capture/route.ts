@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { OrderService } from '@/lib/supabase'
+import { sendOrderConfirmationEmails } from '@/lib/email'
 
 // Configuration PayPal
 const PAYPAL_BASE_URL = process.env.NODE_ENV === 'production' 
@@ -58,6 +59,31 @@ export async function POST(request: NextRequest) {
     await OrderService.updatePaymentStatus(order.id, 'paid', paypalOrderId)
     
     console.log('✅ Statut de commande mis à jour:', orderNumber)
+    
+    // Envoi des emails de confirmation après paiement validé
+    console.log('📧 Envoi des emails de confirmation après paiement...')
+    try {
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://votre-domaine.com' 
+        : `http://localhost:3000`
+      
+      const emailResults = await sendOrderConfirmationEmails({
+        orderNumber: order.order_number,
+        petName: order.pet_name,
+        animalType: order.animal_type,
+        childName: order.child_name,
+        email: order.client_email,
+        numberOfSheets: order.number_of_sheets,
+        totalAmount: order.total_amount,
+        photoUrl: order.photo_url ? `${baseUrl}${order.photo_url}` : undefined,
+        notes: order.admin_notes || undefined
+      })
+      
+      console.log('📧 Résultats envoi emails:', emailResults)
+    } catch (emailError) {
+      console.error('❌ Erreur envoi emails:', emailError)
+      // Ne pas faire échouer la capture pour un problème d'email
+    }
     
     return NextResponse.json({
       success: true,

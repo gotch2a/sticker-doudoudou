@@ -161,23 +161,7 @@ export async function POST(request: NextRequest) {
       
       console.log('✅ Commande enregistrée avec succès dans Supabase')
 
-      // Envoi des emails de confirmation en arrière-plan
-      const emailData = {
-        orderNumber: newOrder.order_number,
-        petName: orderData.petName,
-        animalType: orderData.animalType,
-        childName: orderData.childName,
-        email: orderData.email,
-        numberOfSheets: orderData.numberOfSheets,
-        totalAmount: newOrder.total_amount,
-        photoUrl: orderData.photo ? `${baseUrl}${orderData.photo}` : undefined,
-        notes: newOrder.admin_notes || undefined
-      }
-      
-      // Envoyer les emails (sans attendre pour ne pas ralentir la réponse)
-      sendOrderConfirmationEmails(emailData).catch(error => {
-        console.error('❌ Erreur lors de l\'envoi des emails:', error)
-      })
+      // Les emails seront envoyés après la capture PayPal réussie
 
       // Trouver l'URL d'approbation PayPal
       const approvalUrl = paypalOrder.links?.find((link: any) => link.rel === 'approve')?.href
@@ -197,22 +181,7 @@ export async function POST(request: NextRequest) {
       // Fallback mode démo si PayPal échoue
       await OrderService.updatePaymentStatus(newOrder.id, 'pending', `fallback_${Date.now()}`)
       
-      // Envoi des emails même en mode fallback
-      const emailData = {
-        orderNumber: newOrder.order_number,
-        petName: orderData.petName,
-        animalType: orderData.animalType,
-        childName: orderData.childName,
-        email: orderData.email,
-        numberOfSheets: orderData.numberOfSheets,
-        totalAmount: newOrder.total_amount,
-        photoUrl: orderData.photo ? `${baseUrl}${orderData.photo}` : undefined,
-        notes: newOrder.admin_notes || undefined
-      }
-      
-      sendOrderConfirmationEmails(emailData).catch(error => {
-        console.error('❌ Erreur lors de l\'envoi des emails (fallback):', error)
-      })
+      // En mode fallback, les emails seront envoyés depuis la page de confirmation
       
       return NextResponse.json({
         success: true,
