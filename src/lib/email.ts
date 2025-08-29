@@ -46,7 +46,7 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
     const resend = getResend()
     
     const { data, error } = await resend.emails.send({
-      from: 'Sticker DOUDOU <noreply@stickerdoudou.fr>',
+      from: 'Sticker DOUDOU <onboarding@resend.dev>',
       to: [orderData.email],
       subject: `✅ Commande confirmée - ${orderData.orderNumber}`,
       html: `
@@ -181,7 +181,7 @@ export async function sendArtistNotificationEmail(orderData: OrderData) {
     const resend = getResend()
     
     const { data, error } = await resend.emails.send({
-      from: 'Sticker DOUDOU <noreply@stickerdoudou.fr>',
+      from: 'Sticker DOUDOU <onboarding@resend.dev>',
       to: [artistEmail],
       subject: `🎨 Nouvelle commande à traiter - ${orderData.orderNumber}`,
       html: `
