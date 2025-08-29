@@ -24,6 +24,7 @@ export default function ConfirmationPage() {
   const [paymentStatus, setPaymentStatus] = useState<'processing' | 'success' | 'error'>('processing')
   const [captureInProgress, setCaptureInProgress] = useState(false)
   const [orderDetails, setOrderDetails] = useState<any>(null)
+  const [orderDetailsLoaded, setOrderDetailsLoaded] = useState(false)
 
   useEffect(() => {
     // Mode démo : succès immédiat
@@ -37,12 +38,15 @@ export default function ConfirmationPage() {
       capturePayPalPayment()
     } else if (!paypalToken) {
       setPaymentStatus('success')
+      fetchOrderDetails()
     }
-    
+  }, [isDemo, paypalToken, orderId]) // Dépendances FIXES - ne pas inclure captureInProgress
+
+  useEffect(() => {
     // Arrêter les confettis après 3 secondes
     const timer = setTimeout(() => setConfetti(false), 3000)
     return () => clearTimeout(timer)
-  }, [paypalToken, orderId, isDemo, captureInProgress])
+  }, []) // Une seule fois au mount
 
   const capturePayPalPayment = async () => {
     if (captureInProgress) return // Éviter les appels multiples
@@ -78,11 +82,18 @@ export default function ConfirmationPage() {
 
 
   const fetchOrderDetails = async () => {
+    // Protection contre les appels multiples
+    if (orderDetailsLoaded || !orderId) {
+      return
+    }
+    
     try {
+      console.log('🔍 Récupération détails commande:', orderId)
       const response = await fetch(`/api/orders/${orderId}`)
       if (response.ok) {
         const details = await response.json()
         setOrderDetails(details)
+        setOrderDetailsLoaded(true)
         console.log('📋 Détails commande récupérés:', details)
       }
     } catch (error) {

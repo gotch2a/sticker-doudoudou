@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { OrderService } from '@/lib/supabase'
-import { sendOrderConfirmationEmails } from '@/lib/email'
 
 // Configuration PayPal
 const PAYPAL_BASE_URL = process.env.NODE_ENV === 'production' 
