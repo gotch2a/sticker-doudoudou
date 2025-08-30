@@ -157,8 +157,8 @@ export default function ConfidentialitePage() {
                 Contactez notre délégué à la protection des données :
               </p>
               <div className="text-pink-700">
-                <p><strong>Email :</strong> dpo@stickerdoudou.fr</p>
-                <p><strong>Courrier :</strong> DPO Sticker DOUDOU, [Adresse]</p>
+                <p><strong>Email :</strong> dpo@doudoudoud.fr</p>
+                <p><strong>Courrier :</strong> DPO Doudoudou, [Adresse]</p>
                 <p><strong>Délai de réponse :</strong> 30 jours maximum</p>
               </div>
             </div>

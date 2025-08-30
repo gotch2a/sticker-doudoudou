@@ -5,15 +5,20 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Sticker DOUDOU',
-  description: 'Application mobile et desktop moderne avec Next.js',
+  title: 'Doudoudou',
+  description: 'Transformez les doudous en souvenirs magiques avec Doudoudou',
   manifest: '/manifest.json',
-  themeColor: '#0ea5e9',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/icon-192x192.png',
   },
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#0ea5e9',
 }
 
 export default function RootLayout({
@@ -24,8 +29,6 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
         <meta name="theme-color" content="#0ea5e9" />
       </head>
       <body className={`${inter.className} antialiased`}>

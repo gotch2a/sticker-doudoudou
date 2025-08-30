@@ -1,0 +1,76 @@
+[
+  {
+    "id": "planche-base",
+    "name": "Planche de stickers de base",
+    "description": "Une planche de stickers personnalisés avec votre doudou",
+    "originalPrice": 12.9,
+    "salePrice": 15.9,
+    "savings": 0,
+    "icon": "🏷️",
+    "active": true,
+    "category": "base",
+    "features": [
+      "Personnalisation complète",
+      "Haute qualité",
+      "Livraison rapide"
+    ]
+  },
+  {
+    "id": "planche-bonus",
+    "name": "1 Planche Bonus",
+    "description": "Une planche supplémentaire à prix exceptionnel",
+    "originalPrice": 15.9,
+    "salePrice": 5.9,
+    "savings": 10,
+    "icon": "🏷️",
+    "badge": "-60%",
+    "popular": true,
+    "active": true,
+    "category": "upsell",
+    "features": [
+      "1 planche supplémentaire",
+      "Prix ultra-attractif",
+      "Même qualité premium",
+      "Livraison groupée",
+      "Formats assortis"
+    ]
+  },
+  {
+    "id": "photo-premium",
+    "name": "Photo Doudou Premium",
+    "description": "Une magnifique photo format 13x18 avec cadre inclus",
+    "originalPrice": 39.9,
+    "salePrice": 29.9,
+    "savings": 10,
+    "icon": "🖼️",
+    "badge": "Cadre Inclus",
+    "active": true,
+    "category": "upsell",
+    "features": [
+      "Format 13x18 haute qualité",
+      "Papier photo premium",
+      "Cadre élégant inclus",
+      "Prêt à accrocher",
+      "Texte personnalisé avec prénom"
+    ]
+  },
+  {
+    "id": "livre-histoire",
+    "name": "Livre d'Histoire Personnalisé",
+    "description": "L'histoire magique de votre doudou en 8-10 pages illustrées",
+    "originalPrice": 34.9,
+    "salePrice": 24.9,
+    "savings": 10,
+    "icon": "📖",
+    "badge": "Populaire",
+    "active": false,
+    "category": "upsell",
+    "features": [
+      "8-10 pages d'histoire",
+      "Illustrations personnalisées",
+      "Prénom intégré dans l'histoire",
+      "Couverture rigide",
+      "Format 21x21cm"
+    ]
+  }
+]

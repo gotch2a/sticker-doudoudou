@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Camera, 
@@ -20,6 +20,7 @@ interface FormData {
   petName: string
   animalType: string
   childName: string
+  childAge: string
   address: string
   city: string
   postalCode: string
@@ -37,10 +38,11 @@ export default function CommandePage() {
     petName: '',
     animalType: '',
     childName: '',
+    childAge: '',
     address: '',
     city: '',
     postalCode: '',
-    numberOfSheets: 1,
+    numberOfSheets: 1, // Fixé à 1 planche pour cette étape
     notes: '',
     email: '',
     consent: false
@@ -88,6 +90,7 @@ export default function CommandePage() {
     if (!formData.petName.trim()) newErrors.petName = 'Le surnom du doudou est requis'
     if (!formData.animalType.trim()) newErrors.animalType = 'Dites-nous ce que c\'est comme objet'
     if (!formData.childName.trim()) newErrors.childName = 'Le prénom de l\'enfant est requis'
+    if (!formData.childAge) newErrors.childAge = 'L\'âge de l\'enfant est requis'
     if (!formData.address.trim()) newErrors.address = 'L\'adresse est requise'
     if (!formData.city.trim()) newErrors.city = 'La ville est requise'
     if (!formData.postalCode.trim()) newErrors.postalCode = 'Le code postal est requis'
@@ -131,7 +134,12 @@ export default function CommandePage() {
         petName: formData.petName,
         animalType: formData.animalType,
         childName: formData.childName,
+        childAge: formData.childAge,
         email: formData.email,
+        address: formData.address,
+        city: formData.city,
+        postalCode: formData.postalCode,
+        notes: formData.notes,
         numberOfSheets: formData.numberOfSheets.toString(),
         ...(photoFileName && { photo: `/api/photos/${photoFileName}` })
       })
@@ -150,8 +158,29 @@ export default function CommandePage() {
     return emailRegex.test(email)
   }
 
-  const pricePerSheet = 12.90
-  const totalPrice = formData.numberOfSheets * pricePerSheet
+  const [pricePerSheet, setPricePerSheet] = useState(12.90)
+  const basePrice = formData.numberOfSheets * pricePerSheet
+  const shippingCost = 3.5 // Prix de base pour les stickers seuls
+  const totalPrice = basePrice + shippingCost
+
+  // Charger le prix dynamique au montage
+  useEffect(() => {
+    const loadPrice = async () => {
+      try {
+        const response = await fetch('/api/admin/products')
+        if (response.ok) {
+          const { products } = await response.json()
+          const baseProduct = products.find((p: any) => p.id === 'planche-base')
+          if (baseProduct) {
+            setPricePerSheet(baseProduct.salePrice)
+          }
+        }
+      } catch (error) {
+        console.error('Erreur chargement prix:', error)
+      }
+    }
+    loadPrice()
+  }, [])
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
@@ -313,6 +342,31 @@ export default function CommandePage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Âge de l'enfant *
+              </label>
+              <select
+                value={formData.childAge}
+                onChange={(e) => setFormData({ ...formData, childAge: e.target.value })}
+                className={`w-full px-4 py-3 rounded-xl border ${
+                  errors.childAge ? 'border-red-300' : 'border-gray-300'
+                } focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-colors`}
+              >
+                <option value="">Sélectionner l'âge</option>
+                <option value="0-12mois">0-12 mois (bébé)</option>
+                <option value="1-2ans">1-2 ans (bambin)</option>
+                <option value="3-5ans">3-5 ans (petite enfance)</option>
+                <option value="6-8ans">6-8 ans (enfant)</option>
+                <option value="9-12ans">9-12 ans (pré-ado)</option>
+                <option value="13-17ans">13-17 ans (adolescent)</option>
+                <option value="18ans+">18 ans et plus (adulte)</option>
+              </select>
+              {errors.childAge && (
+                <span className="text-red-600 text-sm mt-1">{errors.childAge}</span>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Adresse complète *
               </label>
               <input
@@ -402,22 +456,12 @@ export default function CommandePage() {
                 Nombre de planches
               </label>
               <div className="flex items-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, numberOfSheets: Math.max(1, formData.numberOfSheets - 1) })}
-                  className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors"
-                >
-                  -
-                </button>
-                <span className="text-xl font-semibold w-8 text-center">{formData.numberOfSheets}</span>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, numberOfSheets: Math.min(5, formData.numberOfSheets + 1) })}
-                  className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors"
-                >
-                  +
-                </button>
-                <span className="text-sm text-gray-500">× {pricePerSheet}€ = {totalPrice}€</span>
+                <span className="text-xl font-semibold text-pink-600 bg-pink-50 px-4 py-2 rounded-lg">
+                  1 planche incluse
+                </span>
+                <span className="text-sm text-gray-500">
+                  🎁 Des planches supplémentaires seront proposées à l'étape suivante
+                </span>
               </div>
             </div>
 
@@ -442,12 +486,22 @@ export default function CommandePage() {
             transition={{ delay: 0.4 }}
             className="bg-white rounded-2xl p-6 shadow-lg"
           >
-            <div className="flex justify-between items-center mb-6">
+            <div className="space-y-2 mb-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700">Stickers ({formData.numberOfSheets} planche{formData.numberOfSheets > 1 ? 's' : ''})</span>
+                <span className="font-medium">{basePrice.toFixed(2)}€</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700">🚚 Frais de livraison</span>
+                <span className="font-medium">{shippingCost.toFixed(2)}€</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center pt-4 border-t-2 border-gray-200">
               <span className="text-lg font-semibold text-gray-900">Total</span>
-              <span className="text-2xl font-bold text-pink-600">{totalPrice}€</span>
+              <span className="text-2xl font-bold text-pink-600">{totalPrice.toFixed(2)}€</span>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-4 mt-6">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"

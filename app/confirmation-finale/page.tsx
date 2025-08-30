@@ -33,21 +33,28 @@ export default function ConfirmationFinalePage() {
     switch (productId) {
       case 'photo-premium':
         return {
-          name: 'Photo Doudou Premium',
+          name: 'Photo Doudou Premium (en pause)',
           price: '29,90€',
           icon: '🖼️',
           description: 'Photo haute qualité avec cadre inclus'
         }
       case 'livre-histoire':
         return {
-          name: 'Livre d\'Histoire Personnalisé',
+          name: 'Livre d\'Histoire Personnalisé (en pause)',
           price: '24,90€',
           icon: '📖',
           description: 'Histoire magique en 16 pages illustrées'
         }
+      case 'planche-bonus':
+        return {
+          name: '1 Planche Bonus',
+          price: '4,90€',
+          icon: '🏷️',
+          description: 'Une planche supplémentaire à prix exceptionnel'
+        }
       case 'pack-stickers':
         return {
-          name: 'Pack 3 Planches Bonus',
+          name: 'Pack 3 Planches Bonus (obsolète)',
           price: '9,90€',
           icon: '🏷️',
           description: '3 planches supplémentaires à prix réduit'

@@ -34,6 +34,17 @@ export async function GET(
 
     // Lecture du fichier
     const filePath = path.join(process.cwd(), 'uploads', 'photos', filename)
+    
+    // Vérifier l'existence du fichier avant de le lire
+    const fs = require('fs')
+    if (!fs.existsSync(filePath)) {
+      console.warn(`📷 Photo non trouvée: ${filename}`)
+      return NextResponse.json(
+        { error: 'Photo non trouvée' },
+        { status: 404 }
+      )
+    }
+    
     const fileBuffer = await readFile(filePath)
 
     // Détermination du type MIME basé sur l'extension

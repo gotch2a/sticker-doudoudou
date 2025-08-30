@@ -1,7 +1,7 @@
 {
-  "name": "Sticker DOUDOU",
-  "short_name": "StickerDOUDOU",
-  "description": "Application mobile et desktop moderne avec Next.js",
+  "name": "Doudoudou",
+  "short_name": "Doudoudou",
+  "description": "Transformez les doudous en souvenirs magiques avec Doudoudou",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

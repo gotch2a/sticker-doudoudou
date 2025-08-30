@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { OrderService } from '@/lib/supabase'
+import { serverProductSettingsService } from '@/lib/serverProductSettings'
+import { serverShippingSettingsService } from '@/lib/serverShippingSettings'
+import { sendOrderConfirmationEmails } from '@/lib/email'
 
 // Configuration PayPal
 const PAYPAL_BASE_URL = process.env.NODE_ENV === 'production' 
@@ -69,47 +72,60 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Calcul du prix avec upsells
-    const basePrice = orderData.numberOfSheets * 12.90
+    // Calcul du prix avec les paramètres dynamiques
+    const basePricePerSheet = serverProductSettingsService.getBasePlanchePrice()
+    const basePrice = orderData.numberOfSheets * basePricePerSheet
     let upsellTotal = 0
     let upsellDetails = ''
     
+    console.log(`💰 Prix planche de base: ${basePricePerSheet}€ (${orderData.numberOfSheets} × ${basePricePerSheet}€ = ${basePrice}€)`)
+    
     if (orderData.upsells && orderData.upsells.length > 0) {
-      const upsellPrices: Record<string, number> = {
-        'photo-premium': 29.90,
-        'livre-histoire': 24.90,
-        'planche-bonus': 4.90
-      }
-      
-      const upsellNames: Record<string, string> = {
-        'photo-premium': 'Photo Doudou Premium',
-        'livre-histoire': 'Livre d\'Histoire Personnalisé',
-        'planche-bonus': '1 Planche Bonus'
-      }
-      
       orderData.upsells.forEach(upsellId => {
-        if (upsellPrices[upsellId]) {
-          upsellTotal += upsellPrices[upsellId]
-          upsellDetails += `\n+ ${upsellNames[upsellId]}: ${upsellPrices[upsellId].toFixed(2)}€`
+        const price = serverProductSettingsService.getProductPrice(upsellId)
+        const product = serverProductSettingsService.getProduct(upsellId)
+        
+        if (price > 0 && product) {
+          upsellTotal += price
+          upsellDetails += `\n+ ${product.name}: ${price.toFixed(2)}€`
+          console.log(`💰 Upsell ${upsellId}: ${price}€`)
+        } else {
+          console.warn(`⚠️ Produit upsell non trouvé ou inactif: ${upsellId}`)
         }
       })
     }
     
-    const totalAmount = orderData.totalAmount || (basePrice + upsellTotal)
+    // Calcul des frais de livraison avec paramètres dynamiques
+    const shippingInfo = serverShippingSettingsService.calculateShipping(orderData.upsells || [])
+    const shippingCost = shippingInfo.cost
+    console.log(`🚚 Frais de livraison: ${shippingCost}€ (${shippingInfo.reason})`)
+    
+    const totalAmount = orderData.totalAmount || (basePrice + upsellTotal + shippingCost)
     
     console.log('💰 Calcul des prix:', {
       basePrice: basePrice.toFixed(2),
       upsellTotal: upsellTotal.toFixed(2),
+      shippingCost: shippingCost.toFixed(2),
       totalReceived: orderData.totalAmount,
       finalTotal: totalAmount.toFixed(2)
     })
 
     // Créer la commande dans Supabase avec le prix total
+    console.log('📍 Données complètes à enregistrer:', {
+      address: orderData.address,
+      city: orderData.city,
+      postalCode: orderData.postalCode,
+      childAge: orderData.childAge,
+      notes: orderData.notes,
+      photo: orderData.photo
+    })
+
     const newOrder = await OrderService.createOrder({
       photo_url: orderData.photo,
       pet_name: orderData.petName,
       animal_type: orderData.animalType,
       child_name: orderData.childName,
+      child_age: orderData.childAge || '',
       client_email: orderData.email,
       address: orderData.address || '',
       city: orderData.city || '',
@@ -125,7 +141,7 @@ export async function POST(request: NextRequest) {
     const briefNote = `🎨 NOUVEAU BRIEF ARTISTE
 ==========================================
 📋 Doudou: ${orderData.petName} (${orderData.animalType})
-👶 Pour: ${orderData.childName}
+👶 Pour: ${orderData.childName} (${orderData.childAge || 'âge non spécifié'})
 📧 Contact: ${orderData.email}
 📦 Planches: ${orderData.numberOfSheets} (${basePrice.toFixed(2)}€)
 ${upsellDetails ? '🎁 PRODUITS BONUS:' + upsellDetails : ''}
@@ -173,7 +189,7 @@ ${upsellDetails ? '🎁 PRODUITS BONUS:' + upsellDetails : ''}
         application_context: {
           return_url: `${baseUrl}/confirmation?order_id=${newOrder.order_number}`,
           cancel_url: `${baseUrl}/commande?cancelled=true`,
-          brand_name: 'Sticker DOUDOU',
+          brand_name: 'Doudoudou',
           landing_page: 'BILLING',
           user_action: 'PAY_NOW'
         }
@@ -201,7 +217,37 @@ ${upsellDetails ? '🎁 PRODUITS BONUS:' + upsellDetails : ''}
       
       console.log('✅ Commande enregistrée avec succès dans Supabase')
 
-      // Les emails seront envoyés après la capture PayPal réussie
+      // Envoyer les emails de confirmation
+      try {
+        const emailData = {
+          orderNumber: newOrder.order_number,
+          email: orderData.email,
+          petName: orderData.petName,
+          animalType: orderData.animalType,
+          childName: orderData.childName,
+          numberOfSheets: orderData.numberOfSheets,
+          totalAmount: newOrder.total_amount,
+          notes: orderData.notes || ''
+        }
+        
+        console.log('📧 Envoi des emails de confirmation...')
+        const emailResults = await sendOrderConfirmationEmails(emailData)
+        
+        if (emailResults.client.success) {
+          console.log('✅ Email client envoyé avec succès')
+        } else {
+          console.error('❌ Erreur email client:', emailResults.client.error)
+        }
+        
+        if (emailResults.artist.success) {
+          console.log('✅ Email artiste envoyé avec succès')
+        } else {
+          console.error('❌ Erreur email artiste:', emailResults.artist.error)
+        }
+      } catch (emailError) {
+        console.error('❌ Erreur générale envoi emails:', emailError)
+        // Ne pas faire échouer la commande pour un problème d'email
+      }
 
       // Trouver l'URL d'approbation PayPal
       const approvalUrl = paypalOrder.links?.find((link: any) => link.rel === 'approve')?.href

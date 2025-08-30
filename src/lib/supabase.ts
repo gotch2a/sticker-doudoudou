@@ -54,6 +54,7 @@ export interface Order {
   animal_type: string
   photo_url: string
   child_name: string
+  child_age: string
   client_email: string
   address: string
   city: string
@@ -87,6 +88,7 @@ export class OrderService {
     pet_name: string
     animal_type: string
     child_name: string
+    child_age: string
     client_email: string
     address: string
     city: string
@@ -107,6 +109,7 @@ export class OrderService {
         animal_type: orderData.animal_type,
         photo_url: orderData.photo_url,
         child_name: orderData.child_name,
+        child_age: orderData.child_age,
         client_email: orderData.client_email,
         address: orderData.address,
         city: orderData.city,

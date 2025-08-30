@@ -92,7 +92,7 @@ self.addEventListener('push', (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification('Sticker DOUDOU', options)
+    self.registration.showNotification('Doudoudou', options)
   )
 })
 

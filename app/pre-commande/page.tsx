@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { productSettingsService } from '@/lib/productSettings'
+import { shippingSettingsService } from '@/lib/shippingSettings'
 import { 
   Heart,
   Star,
@@ -14,7 +16,8 @@ import {
   Sparkles,
   ShoppingCart,
   Check,
-  Plus
+  Plus,
+  X
 } from 'lucide-react'
 
 interface UpsellProduct {
@@ -30,10 +33,13 @@ interface UpsellProduct {
   popular?: boolean
 }
 
-const upsellProducts: UpsellProduct[] = [
+// Les produits upsell sont maintenant chargés dynamiquement
+
+// Articles mis en pause (Photo et Livre) - peuvent être réactivés depuis l'admin
+const pausedProducts: UpsellProduct[] = [
   {
     id: 'photo-premium',
-    name: 'Photo Doudou Premium',
+    name: 'Photo Doudou Premium (en pause)',
     description: 'Une magnifique photo format 13x18 avec cadre inclus',
     originalPrice: 39.90,
     salePrice: 29.90,
@@ -50,37 +56,19 @@ const upsellProducts: UpsellProduct[] = [
   },
   {
     id: 'livre-histoire',
-    name: 'Livre d\'Histoire Personnalisé',
+    name: 'Livre d\'Histoire Personnalisé (en pause)',
     description: 'L\'histoire magique de votre doudou en 8-10 pages illustrées',
     originalPrice: 34.90,
     salePrice: 24.90,
     savings: 10.00,
     icon: BookOpen,
     badge: 'Populaire',
-    popular: true,
     features: [
       '8-10 pages d\'histoire',
       'Illustrations personnalisées',
       'Prénom intégré dans l\'histoire',
       'Couverture rigide',
       'Format 21x21cm'
-    ]
-  },
-  {
-    id: 'planche-bonus',
-    name: '1 Planche Bonus',
-    description: 'Une planche supplémentaire à prix exceptionnel',
-    originalPrice: 12.90,
-    salePrice: 4.90,
-    savings: 8.00,
-    icon: Sticker,
-    badge: '-60%',
-    features: [
-      '1 planche supplémentaire',
-      'Prix ultra-attractif',
-      'Même qualité premium',
-      'Livraison groupée',
-      'Formats assortis'
     ]
   }
 ]
@@ -93,15 +81,59 @@ export default function PreCommandePage() {
   const petName = searchParams.get('petName') || 'votre doudou'
   const animalType = searchParams.get('animalType') || 'animal'
   const childName = searchParams.get('childName') || 'votre enfant'
+  const childAge = searchParams.get('childAge') || ''
   const email = searchParams.get('email') || ''
+  const address = searchParams.get('address') || ''
+  const city = searchParams.get('city') || ''
+  const postalCode = searchParams.get('postalCode') || ''
+  const notes = searchParams.get('notes') || ''
   const numberOfSheets = parseInt(searchParams.get('numberOfSheets') || '1')
   const photo = searchParams.get('photo') || ''
   
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
+  const [upsellProducts, setUpsellProducts] = useState<UpsellProduct[]>([])
+
+  // Charger les produits upsell actifs au montage du composant
+  useEffect(() => {
+    const activeProducts = productSettingsService.getActiveUpsellProducts()
+    const convertedProducts: UpsellProduct[] = activeProducts.map(product => ({
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      originalPrice: product.originalPrice,
+      salePrice: product.salePrice,
+      savings: product.savings,
+      icon: getIconComponent(product.icon),
+      badge: product.badge,
+      popular: product.popular,
+      features: product.features
+    }))
+    setUpsellProducts(convertedProducts)
+    
+    // Charger le prix de base dynamiquement
+    const baseProduct = productSettingsService.getProduct('planche-base')
+    if (baseProduct) {
+      setBasePricePerSheet(baseProduct.salePrice)
+      console.log('💰 Prix planche de base chargé:', baseProduct.salePrice)
+    }
+    
+    console.log('🏷️ Produits upsell actifs chargés:', convertedProducts)
+  }, [])
+
+  // Fonction pour convertir les icônes texte en composants
+  const getIconComponent = (iconText: string) => {
+    switch (iconText) {
+      case '🏷️': return Sticker
+      case '🖼️': return Image
+      case '📖': return BookOpen
+      default: return Sticker
+    }
+  }
 
   // Prix de base
-  const basePrice = numberOfSheets * 12.90
+  const [basePricePerSheet, setBasePricePerSheet] = useState(12.90)
+  const basePrice = numberOfSheets * basePricePerSheet
   
   // Calcul du total avec upsells
   const upsellTotal = selectedProducts.reduce((total, productId) => {
@@ -109,7 +141,11 @@ export default function PreCommandePage() {
     return total + (product?.salePrice || 0)
   }, 0)
   
-  const totalPrice = basePrice + upsellTotal
+  // Calcul des frais de livraison dynamiques
+  const shippingInfo = shippingSettingsService.calculateShipping(selectedProducts)
+  const shippingCost = shippingInfo.cost
+  
+  const totalPrice = basePrice + upsellTotal + shippingCost
 
   const handleProductToggle = (productId: string) => {
     setSelectedProducts(prev => 
@@ -117,6 +153,10 @@ export default function PreCommandePage() {
         ? prev.filter(id => id !== productId)
         : [...prev, productId]
     )
+  }
+
+  const handleRemoveFromCart = (productId: string) => {
+    setSelectedProducts(prev => prev.filter(id => id !== productId))
   }
 
   const handleFinalizeOrder = async () => {
@@ -128,7 +168,12 @@ export default function PreCommandePage() {
         petName,
         animalType,
         childName,
+        childAge,
         email,
+        address,
+        city,
+        postalCode,
+        notes,
         numberOfSheets,
         photo,
         upsells: selectedProducts,
@@ -355,20 +400,46 @@ export default function PreCommandePage() {
           </div>
 
           {/* Upsells sélectionnés */}
-          {selectedProducts.map(productId => {
-            const product = upsellProducts.find(p => p.id === productId)
-            if (!product) return null
-            
-            return (
-              <div key={productId} className="flex items-center justify-between py-3 border-b border-gray-200">
-                <span className="text-gray-700 flex items-center gap-2">
-                  <Plus className="w-4 h-4 text-green-600" />
-                  {product.name}
-                </span>
-                <span className="font-medium text-green-600">{product.salePrice.toFixed(2)}€</span>
-              </div>
-            )
-          })}
+          {selectedProducts.length > 0 ? (
+            selectedProducts.map(productId => {
+              const product = upsellProducts.find(p => p.id === productId)
+              if (!product) return null
+              
+              return (
+                <div key={productId} className="flex items-center justify-between py-3 border-b border-gray-200 group">
+                  <span className="text-gray-700 flex items-center gap-2">
+                    <Plus className="w-4 h-4 text-green-600" />
+                    {product.name}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium text-green-600">{product.salePrice.toFixed(2)}€</span>
+                    <button
+                      onClick={() => handleRemoveFromCart(productId)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full hover:bg-red-100 text-red-500 hover:text-red-700"
+                      title="Supprimer cet article"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )
+            })
+          ) : (
+            <div className="py-3 border-b border-gray-200">
+              <span className="text-gray-500 text-sm italic">
+                Aucun produit supplémentaire sélectionné
+              </span>
+            </div>
+          )}
+
+          {/* Frais de livraison */}
+          <div className="flex items-center justify-between py-3 border-b border-gray-200">
+            <span className="text-gray-700 flex items-center gap-2">
+              🚚 Frais de livraison 
+              <span className="text-xs text-gray-500">({shippingInfo.reason})</span>
+            </span>
+            <span className="font-medium">{shippingCost.toFixed(2)}€</span>
+          </div>
 
           {/* Total */}
           <div className="flex items-center justify-between py-4 text-xl font-bold border-t-2 border-gray-300 mt-4">

@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Menu, X, Smartphone, Monitor } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
+import Image from 'next/image'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -24,12 +25,17 @@ export default function Header() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-2"
           >
-            <div className="flex items-center gap-1">
-              <Smartphone className="w-6 h-6 text-primary-600" />
-              <Monitor className="w-6 h-6 text-indigo-600" />
+            <div className="w-8 h-8">
+              <Image
+                src="/images/logo.svg"
+                alt="Doudoudou Logo"
+                width={32}
+                height={32}
+                className="w-full h-full"
+              />
             </div>
             <span className="text-xl font-bold text-gray-900">
-              Sticker DOUDOU
+              Doudoudou
             </span>
           </motion.div>
 

@@ -124,13 +124,13 @@ app.whenReady().then(() => {
       label: 'Aide',
       submenu: [
         {
-          label: 'À propos de Sticker DOUDOU',
+          label: 'À propos de Doudoudou',
           click: () => {
             // Afficher la fenêtre À propos
             require('electron').dialog.showMessageBox(mainWindow, {
               type: 'info',
               title: 'À propos',
-              message: 'Sticker DOUDOU',
+              message: 'Doudoudou',
               detail: 'Application mobile et desktop moderne avec Next.js\nVersion 1.0.0'
             })
           }

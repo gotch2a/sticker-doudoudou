@@ -27,12 +27,12 @@ export default function CGVPage() {
             <h2>1. Objet</h2>
             <p>
               Les présentes Conditions Générales de Vente (CGV) régissent la vente de stickers personnalisés 
-              proposés par Sticker DOUDOU. Toute commande implique l'acceptation sans réserve des présentes CGV.
+              proposés par Doudoudou. Toute commande implique l'acceptation sans réserve des présentes CGV.
             </p>
 
             <h2>2. Produits et Services</h2>
             <p>
-              Sticker DOUDOU propose la création et la vente de planches de stickers personnalisés basés sur 
+              Doudoudou propose la création et la vente de planches de stickers personnalisés basés sur 
               les photos de doudous fournis par les clients. Chaque sticker est créé à la main par notre artiste.
             </p>
 

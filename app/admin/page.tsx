@@ -1,7 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { OrderService, Order, AdminNote, generateSecurePhotoUrl } from '@/lib/supabase'
+import { productSettingsService, ProductSettings, ProductPack } from '@/lib/productSettings'
+import { shippingSettingsService, ShippingSettings } from '@/lib/shippingSettings'
 
 export default function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([])
@@ -10,6 +13,14 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [newNote, setNewNote] = useState('')
   const [securePhotoUrls, setSecurePhotoUrls] = useState<Record<string, string>>({})
+  
+  // État pour la gestion des articles
+  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'packs' | 'shipping'>('orders')
+  const [products, setProducts] = useState<ProductSettings[]>([])
+  const [productPacks, setProductPacks] = useState<ProductPack[]>([])
+  const [shippingSettings, setShippingSettings] = useState<ShippingSettings | null>(null)
+  const [editingProduct, setEditingProduct] = useState<ProductSettings | null>(null)
+  const [editingPack, setEditingPack] = useState<ProductPack | null>(null)
 
   // Charger les commandes depuis Supabase
   const loadOrders = async () => {
@@ -22,8 +33,13 @@ export default function AdminPage() {
       const urlPromises = data
         .filter(order => order.photo_url)
         .map(async (order) => {
-          const secureUrl = await generateSecurePhotoUrl(order.photo_url)
-          return { orderId: order.id, secureUrl }
+          try {
+            const secureUrl = await generateSecurePhotoUrl(order.photo_url)
+            return { orderId: order.id, secureUrl }
+          } catch (error) {
+            console.error(`Erreur génération URL pour ${order.order_number}:`, error)
+            return { orderId: order.id, secureUrl: '#' }
+          }
         })
       
       const resolvedUrls = await Promise.all(urlPromises)
@@ -33,6 +49,7 @@ export default function AdminPage() {
       }, {} as Record<string, string>)
       
       setSecurePhotoUrls(urlsMap)
+      console.log(`📸 ${Object.keys(urlsMap).length} photos traitées sur ${data.length} commandes`)
     } catch (error) {
       console.error('Erreur chargement commandes:', error)
     } finally {
@@ -50,9 +67,49 @@ export default function AdminPage() {
     }
   }
 
+  // Charger les produits depuis le serveur
+  const loadProducts = async () => {
+    const savedProducts = await productSettingsService.loadFromServer()
+    setProducts(savedProducts)
+    console.log('🏷️ Produits chargés depuis le serveur:', savedProducts)
+  }
+
+  const loadProductPacks = () => {
+    const savedPacks = productSettingsService.getPacks()
+    setProductPacks(savedPacks)
+    console.log('📦 Packs chargés:', savedPacks)
+  }
+
+  // Charger les paramètres de livraison depuis le serveur
+  const loadShippingSettings = async () => {
+    const settings = await shippingSettingsService.loadFromServer()
+    setShippingSettings(settings)
+    console.log('🚚 Paramètres livraison chargés:', settings)
+  }
+
+  // Fonctions pour les paramètres de livraison
+  const updateShippingTarif = (tarif: 'tarif1' | 'tarif2', field: string, value: string | number) => {
+    if (!shippingSettings) return
+    
+    const updatedSettings = {
+      ...shippingSettings,
+      [tarif]: {
+        ...shippingSettings[tarif],
+        [field]: value
+      }
+    }
+    setShippingSettings(updatedSettings)
+    shippingSettingsService.saveSettings(updatedSettings)
+    shippingSettingsService.syncWithServer(updatedSettings)
+    console.log(`🚚 Tarif ${tarif} mis à jour:`, { [field]: value })
+  }
+
   // Charger les données au démarrage
   useEffect(() => {
     loadOrders()
+    loadProducts()
+    loadProductPacks()
+    loadShippingSettings()
   }, [])
 
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
@@ -97,14 +154,106 @@ Cree le ${new Date().toLocaleString('fr-FR')}`
     alert('Brief copié dans le presse-papiers !')
   }
 
+  // Fonctions de gestion des produits
+  const toggleProductStatus = (productId: string) => {
+    const currentProduct = products.find(p => p.id === productId)
+    if (currentProduct) {
+      const updatedProducts = productSettingsService.updateProduct(productId, { 
+        active: !currentProduct.active 
+      })
+      setProducts(updatedProducts)
+      alert(`Produit ${currentProduct.active ? 'désactivé' : 'activé'} !`)
+    }
+  }
+
+  const updateProductPrice = (productId: string, field: 'originalPrice' | 'salePrice', value: number) => {
+    const currentProduct = products.find(p => p.id === productId)
+    if (currentProduct) {
+      const updates: any = { [field]: value }
+      
+      // Calculer automatiquement les économies
+      if (field === 'originalPrice') {
+        updates.savings = value - currentProduct.salePrice
+      } else {
+        updates.savings = currentProduct.originalPrice - value
+      }
+      
+      const updatedProducts = productSettingsService.updateProduct(productId, updates)
+      setProducts(updatedProducts)
+      console.log(`💰 Prix mis à jour pour ${productId}:`, updates)
+    }
+  }
+
+  const togglePackStatus = (packId: string) => {
+    const currentPack = productPacks.find(p => p.id === packId)
+    if (currentPack) {
+      const updatedPacks = productSettingsService.updatePack(packId, { 
+        active: !currentPack.active 
+      })
+      setProductPacks(updatedPacks)
+      alert(`Pack ${currentPack.active ? 'désactivé' : 'activé'} !`)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Administration Sticker DOUDOU</h1>
+        <h1 className="text-3xl font-bold mb-8">Administration Doudoudou</h1>
         
-        {loading ? (
-          <p>Chargement des commandes...</p>
-        ) : (
+        {/* Navigation par onglets */}
+        <div className="mb-8">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'orders'
+                    ? 'border-pink-500 text-pink-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                📦 Commandes
+              </button>
+              <button
+                onClick={() => setActiveTab('products')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'products'
+                    ? 'border-pink-500 text-pink-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                🏷️ Articles
+              </button>
+              <button
+                onClick={() => setActiveTab('packs')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'packs'
+                    ? 'border-pink-500 text-pink-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                📦 Packs
+              </button>
+              <button
+                onClick={() => setActiveTab('shipping')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'shipping'
+                    ? 'border-pink-500 text-pink-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                🚚 Livraison
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Contenu des onglets */}
+        {activeTab === 'orders' && (
+          <div>
+            {loading ? (
+              <p>Chargement des commandes...</p>
+            ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <table className="w-full">
               <thead className="bg-gray-100">
@@ -136,20 +285,39 @@ Cree le ${new Date().toLocaleString('fr-FR')}`
                           {order.animal_type} • {order.number_of_sheets} planche(s)
                         </p>
                         {order.photo_url && (
-                          <a 
-                            href={securePhotoUrls[order.id] || '#'} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:text-blue-800"
-                            onClick={(e) => {
-                              if (!securePhotoUrls[order.id]) {
-                                e.preventDefault()
-                                alert('URL de photo en cours de génération...')
-                              }
-                            }}
-                          >
-                            📸 Voir photo
-                          </a>
+                          <div className="mt-2">
+                            {securePhotoUrls[order.id] && securePhotoUrls[order.id] !== '#' ? (
+                              <div className="flex items-center gap-2">
+                                <Image 
+                                  src={securePhotoUrls[order.id]} 
+                                  alt={`Photo de ${order.pet_name}`}
+                                  width={32}
+                                  height={32}
+                                  className="w-8 h-8 object-cover rounded border border-gray-300"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none'
+                                    e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                                  }}
+                                />
+                                <span className="hidden text-xs text-red-600">❌ Erreur chargement</span>
+                                <a 
+                                  href={securePhotoUrls[order.id]} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-blue-600 hover:text-blue-800"
+                                >
+                                  📸 Agrandir
+                                </a>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-gray-200 rounded border border-gray-300 flex items-center justify-center">
+                                  <span className="text-xs">⏳</span>
+                                </div>
+                                <span className="text-xs text-gray-500">Chargement...</span>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
                     </td>
@@ -214,16 +382,269 @@ Cree le ${new Date().toLocaleString('fr-FR')}`
               </tbody>
             </table>
           </div>
+            )}
+            
+            <div className="mt-8">
+              <button
+                onClick={loadOrders}
+                className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700"
+              >
+                Actualiser les commandes
+              </button>
+            </div>
+          </div>
         )}
-        
-        <div className="mt-8">
-          <button
-            onClick={loadOrders}
-            className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700"
-          >
-            Actualiser
-          </button>
-        </div>
+
+        {/* Onglet Gestion des Articles */}
+        {activeTab === 'products' && (
+          <div>
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900">Gestion des Articles</h2>
+                    <p className="text-sm text-gray-600 mt-1">Gérez les prix et la disponibilité de vos articles</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={loadProducts}
+                      className="bg-gray-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-gray-700"
+                    >
+                      🔄 Actualiser
+                    </button>
+                    <a
+                      href="/pre-commande?petName=Test&animalType=chien&childName=Test&email=test@test.com&numberOfSheets=1&photo=test"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700"
+                    >
+                      🧪 Tester l'upsell
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="grid gap-6">
+                  {products.map((product) => (
+                    <div key={product.id} className="border border-gray-200 rounded-lg p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="text-2xl">{product.icon}</span>
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-900">{product.name}</h3>
+                              <p className="text-sm text-gray-600">{product.description}</p>
+                            </div>
+                            {product.badge && (
+                              <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded">
+                                {product.badge}
+                              </span>
+                            )}
+                            {product.popular && (
+                              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                Populaire
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Prix original (€)
+                              </label>
+                              <input
+                                type="number"
+                                step="0.10"
+                                value={product.originalPrice}
+                                onChange={(e) => updateProductPrice(product.id, 'originalPrice', parseFloat(e.target.value) || 0)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Prix de vente (€)
+                              </label>
+                              <input
+                                type="number"
+                                step="0.10"
+                                value={product.salePrice}
+                                onChange={(e) => updateProductPrice(product.id, 'salePrice', parseFloat(e.target.value) || 0)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Économie (€)
+                              </label>
+                              <input
+                                type="number"
+                                value={product.savings.toFixed(2)}
+                                disabled
+                                className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm text-gray-500"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="mb-4">
+                            <h4 className="text-sm font-medium text-gray-700 mb-2">Caractéristiques :</h4>
+                            <ul className="text-sm text-gray-600">
+                              {product.features.map((feature, index) => (
+                                <li key={index} className="flex items-center gap-2">
+                                  <span className="text-green-500">✓</span>
+                                  {feature}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                        
+                        <div className="ml-6 flex flex-col items-end gap-3">
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            product.active 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {product.active ? 'Actif' : 'Inactif'}
+                          </span>
+                          
+                          <button
+                            onClick={() => toggleProductStatus(product.id)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                              product.active
+                                ? 'bg-red-600 text-white hover:bg-red-700'
+                                : 'bg-green-600 text-white hover:bg-green-700'
+                            }`}
+                          >
+                            {product.active ? 'Désactiver' : 'Activer'}
+                          </button>
+                          
+                          <div className="text-right">
+                            <p className="text-sm text-gray-500">Catégorie:</p>
+                            <p className="text-sm font-medium capitalize">{product.category}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Onglet Gestion des Packs */}
+        {activeTab === 'packs' && (
+          <div>
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900">Gestion des Packs</h2>
+                <p className="text-sm text-gray-600 mt-1">Créez et gérez des packs d'articles à prix avantageux</p>
+              </div>
+              
+              <div className="p-6">
+                {productPacks.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-gray-400 mb-4">
+                      <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun pack configuré</h3>
+                    <p className="text-gray-500 mb-4">Créez votre premier pack d'articles pour proposer des offres groupées attractives</p>
+                    <button className="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700">
+                      Créer un pack
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid gap-6">
+                    {productPacks.map((pack) => (
+                      <div key={pack.id} className="border border-gray-200 rounded-lg p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">{pack.name}</h3>
+                            <p className="text-sm text-gray-600 mb-4">{pack.description}</p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Prix original (€)
+                                </label>
+                                <input
+                                  type="number"
+                                  step="0.10"
+                                  value={pack.originalPrice}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Prix du pack (€)
+                                </label>
+                                <input
+                                  type="number"
+                                  step="0.10"
+                                  value={pack.salePrice}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Économie (€)
+                                </label>
+                                <input
+                                  type="number"
+                                  value={pack.savings.toFixed(2)}
+                                  disabled
+                                  className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm text-gray-500"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-700 mb-2">Articles inclus :</h4>
+                              <div className="flex flex-wrap gap-2">
+                                {pack.products.map((productId) => {
+                                  const product = products.find(p => p.id === productId)
+                                  return product ? (
+                                    <span key={productId} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                                      {product.icon} {product.name}
+                                    </span>
+                                  ) : null
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="ml-6 flex flex-col items-end gap-3">
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              pack.active 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {pack.active ? 'Actif' : 'Inactif'}
+                            </span>
+                            
+                            <button
+                              onClick={() => togglePackStatus(pack.id)}
+                              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                                pack.active
+                                  ? 'bg-red-600 text-white hover:bg-red-700'
+                                  : 'bg-green-600 text-white hover:bg-green-700'
+                              }`}
+                            >
+                              {pack.active ? 'Désactiver' : 'Activer'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Modal détails commande */}
         {selectedOrder && (
@@ -270,24 +691,45 @@ Cree le ${new Date().toLocaleString('fr-FR')}`
                       <p><strong>Surnom:</strong> {selectedOrder.pet_name}</p>
                       <p><strong>Type:</strong> {selectedOrder.animal_type}</p>
                       <p><strong>Pour l'enfant:</strong> {selectedOrder.child_name}</p>
+                      {selectedOrder.child_age && (
+                        <p><strong>Âge:</strong> {selectedOrder.child_age}</p>
+                      )}
                       {selectedOrder.photo_url && (
                         <div>
                           <strong>Photo:</strong>
-                          <br />
-                          <a 
-                            href={securePhotoUrls[selectedOrder.id] || '#'} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline"
-                            onClick={(e) => {
-                              if (!securePhotoUrls[selectedOrder.id]) {
-                                e.preventDefault()
-                                alert('URL de photo en cours de génération...')
-                              }
-                            }}
-                          >
-                            📸 Ouvrir la photo du doudou
-                          </a>
+                          <div className="mt-2">
+                            {securePhotoUrls[selectedOrder.id] && securePhotoUrls[selectedOrder.id] !== '#' ? (
+                              <div className="space-y-2">
+                                <Image 
+                                  src={securePhotoUrls[selectedOrder.id]} 
+                                  alt={`Photo de ${selectedOrder.pet_name}`}
+                                  width={96}
+                                  height={96}
+                                  className="w-24 h-24 object-cover rounded border border-gray-300"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none'
+                                    e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                                  }}
+                                />
+                                <div className="hidden text-sm text-red-600">❌ Erreur de chargement de l'image</div>
+                                <a 
+                                  href={securePhotoUrls[selectedOrder.id]} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 underline text-sm"
+                                >
+                                  📸 Ouvrir en grand
+                                </a>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <div className="w-24 h-24 bg-gray-200 rounded border border-gray-300 flex items-center justify-center">
+                                  <span className="text-2xl">⏳</span>
+                                </div>
+                                <span className="text-sm text-gray-500">Chargement de la photo...</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -384,6 +826,160 @@ Cree le ${new Date().toLocaleString('fr-FR')}`
                     Fermer
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Onglet Gestion des Paramètres de Livraison */}
+        {activeTab === 'shipping' && (
+          <div>
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900">Paramètres de Livraison</h2>
+                <p className="text-sm text-gray-600 mt-1">Configurez les frais de livraison selon les produits commandés</p>
+              </div>
+              
+              <div className="p-6">
+                {shippingSettings ? (
+                  <div className="grid gap-6">
+                    {/* Tarif 1 - Stickers uniquement */}
+                    <div className="border border-gray-200 rounded-lg p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                          <span className="text-green-600 text-lg">🚚</span>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">Tarif 1 - Standard</h3>
+                          <p className="text-sm text-gray-600">Pour les commandes de stickers uniquement</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Nom du tarif
+                          </label>
+                          <input
+                            type="text"
+                            value={shippingSettings.tarif1.name}
+                            onChange={(e) => updateShippingTarif('tarif1', 'name', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Prix (€)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.10"
+                            value={shippingSettings.tarif1.price}
+                            onChange={(e) => updateShippingTarif('tarif1', 'price', parseFloat(e.target.value) || 0)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Description
+                        </label>
+                        <textarea
+                          value={shippingSettings.tarif1.description}
+                          onChange={(e) => updateShippingTarif('tarif1', 'description', e.target.value)}
+                          rows={2}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                      </div>
+                      
+                      <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                        <p className="text-sm text-green-800">
+                          <strong>Conditions d'application :</strong> Planche de base seule ou avec planche bonus uniquement
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Tarif 2 - Avec produits physiques */}
+                    <div className="border border-gray-200 rounded-lg p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                          <span className="text-purple-600 text-lg">📦</span>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">Tarif 2 - Premium</h3>
+                          <p className="text-sm text-gray-600">Pour les commandes incluant photo ou livre</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Nom du tarif
+                          </label>
+                          <input
+                            type="text"
+                            value={shippingSettings.tarif2.name}
+                            onChange={(e) => updateShippingTarif('tarif2', 'name', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Prix (€)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.10"
+                            value={shippingSettings.tarif2.price}
+                            onChange={(e) => updateShippingTarif('tarif2', 'price', parseFloat(e.target.value) || 0)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Description
+                        </label>
+                        <textarea
+                          value={shippingSettings.tarif2.description}
+                          onChange={(e) => updateShippingTarif('tarif2', 'description', e.target.value)}
+                          rows={2}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        />
+                      </div>
+                      
+                      <div className="mt-4 p-3 bg-purple-50 rounded-lg">
+                        <p className="text-sm text-purple-800">
+                          <strong>Conditions d'application :</strong> Dès qu'une photo premium ou livre d'histoire est commandé
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Résumé des modifications */}
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <h4 className="font-medium text-blue-900 mb-2">📊 Résumé des tarifs actuels</h4>
+                      <div className="text-sm text-blue-800 space-y-1">
+                        <p><strong>{shippingSettings.tarif1.name} :</strong> {shippingSettings.tarif1.price.toFixed(2)}€</p>
+                        <p><strong>{shippingSettings.tarif2.name} :</strong> {shippingSettings.tarif2.price.toFixed(2)}€</p>
+                      </div>
+                      <p className="text-xs text-blue-600 mt-2">
+                        ✅ Les modifications sont sauvegardées automatiquement
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="text-gray-400 mb-4">
+                      <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Chargement des paramètres...</h3>
+                    <p className="text-gray-500">Veuillez patienter</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

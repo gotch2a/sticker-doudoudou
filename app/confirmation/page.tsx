@@ -8,7 +8,6 @@ import {
   Heart,
   Home,
   Calendar,
-  Truck,
   Star
 } from 'lucide-react'
 import Link from 'next/link'
@@ -26,6 +25,53 @@ export default function ConfirmationPage() {
   const [orderDetailsLoaded, setOrderDetailsLoaded] = useState(false)
   const captureInProgressRef = useRef(false)
 
+  const capturePayPalPayment = async () => {
+    if (captureInProgressRef.current) return
+    captureInProgressRef.current = true
+    
+    try {
+      console.log('🔄 Capture PayPal en cours...')
+      const response = await fetch('/api/paypal/capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          token: paypalToken,
+          orderId: orderId
+        }),
+      })
+
+      const result = await response.json()
+      
+      if (result.success) {
+        console.log('✅ Paiement capturé avec succès')
+        setPaymentStatus('success')
+        fetchOrderDetails()
+      } else {
+        console.error('❌ Erreur capture:', result.error)
+        setPaymentStatus('error')
+      }
+    } catch (error) {
+      console.error('❌ Erreur capture PayPal:', error)
+      setPaymentStatus('error')
+    }
+  }
+
+  const fetchOrderDetails = async () => {
+    if (orderDetailsLoaded) return
+    
+    try {
+      const response = await fetch(`/api/orders/${orderId}`)
+      const result = await response.json()
+      
+      if (result.success) {
+        setOrderDetails(result.order)
+        setOrderDetailsLoaded(true)
+      }
+    } catch (error) {
+      console.error('Erreur chargement détails commande:', error)
+    }
+  }
+
   useEffect(() => {
     // Mode démo : succès immédiat
     if (isDemo) {
@@ -40,7 +86,7 @@ export default function ConfirmationPage() {
       setPaymentStatus('success')
       fetchOrderDetails()
     }
-  }, [isDemo, paypalToken, orderId]) // Dépendances FIXES - ne pas inclure captureInProgress
+  }, [isDemo, paypalToken, orderId])
 
   useEffect(() => {
     // Arrêter les confettis après 3 secondes
@@ -48,58 +94,7 @@ export default function ConfirmationPage() {
     return () => clearTimeout(timer)
   }, []) // Une seule fois au mount
 
-  const capturePayPalPayment = async () => {
-    if (captureInProgressRef.current) return // Éviter les appels multiples
-    
-    captureInProgressRef.current = true
-    try {
-      const response = await fetch('/api/paypal/capture', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          paypalOrderId: paypalToken,
-          orderNumber: orderId
-        })
-      })
 
-      if (response.ok) {
-        setPaymentStatus('success')
-        // Récupérer les détails de la commande
-        await fetchOrderDetails()
-      } else {
-        setPaymentStatus('error')
-      }
-    } catch (error) {
-      console.error('Erreur capture PayPal:', error)
-      setPaymentStatus('error')
-    } finally {
-      captureInProgressRef.current = false
-    }
-  }
-
-
-
-  const fetchOrderDetails = async () => {
-    // Protection contre les appels multiples
-    if (orderDetailsLoaded || !orderId) {
-      return
-    }
-    
-    try {
-      console.log('🔍 Récupération détails commande:', orderId)
-      const response = await fetch(`/api/orders/${orderId}`)
-      if (response.ok) {
-        const details = await response.json()
-        setOrderDetails(details)
-        setOrderDetailsLoaded(true)
-        console.log('📋 Détails commande récupérés:', details)
-      }
-    } catch (error) {
-      console.error('❌ Erreur récupération détails:', error)
-    }
-  }
 
 
 
@@ -247,7 +242,7 @@ export default function ConfirmationPage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="grid sm:grid-cols-2 gap-4 mb-6"
+          className="grid gap-4 mb-6"
         >
           <div className="bg-white rounded-xl p-4 shadow-lg">
             <div className="flex items-center gap-3 mb-2">
@@ -259,34 +254,30 @@ export default function ConfirmationPage() {
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-4 shadow-lg">
-            <div className="flex items-center gap-3 mb-2">
-              <Truck className="w-5 h-5 text-green-600" />
-              <span className="font-medium">Suivi de livraison</span>
-            </div>
-            <p className="text-sm text-gray-600">
-              Un numéro de suivi vous sera envoyé par email dès l'expédition
-            </p>
-          </div>
+
         </motion.div>
 
-        {/* Témoignage */}
+        {/* Invitation à laisser un avis */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-6 mb-6 border border-yellow-200"
+          className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-6 border border-blue-200"
         >
-          <div className="flex items-center gap-2 mb-3">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            ))}
+          <div className="text-center">
+            <div className="text-3xl mb-3">💝</div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              Votre expérience nous intéresse !
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Une fois que vous aurez reçu vos stickers personnalisés, nous serions ravis 
+              de connaître votre avis et celui de votre enfant. Votre retour nous aide à 
+              continuer d'offrir des créations magiques qui font briller les yeux des petits !
+            </p>
+            <p className="text-sm text-gray-500 italic">
+              N'hésitez pas à nous envoyer vos photos et témoignages par email ✨
+            </p>
           </div>
-          <p className="text-gray-800 mb-3 italic">
-            "Ma fille de 3 ans n'en revient toujours pas ! Ses stickers de 'Lapinou' 
-            sont affichés partout dans sa chambre. Merci pour cette belle surprise !"
-          </p>
-          <p className="text-sm text-gray-600 font-medium">— Sarah M., maman d'Emma</p>
         </motion.div>
 
         {/* Récapitulatif de la commande */}
@@ -315,8 +306,8 @@ export default function ConfirmationPage() {
               {/* Upsells */}
               {orderDetails.upsells && orderDetails.upsells.map((upsellId: string) => {
                 const upsellPrices: Record<string, {name: string, price: number}> = {
-                  'photo-premium': { name: 'Photo Doudou Premium', price: 29.90 },
-                  'livre-histoire': { name: 'Livre d\'Histoire Personnalisé', price: 24.90 },
+                  'photo-premium': { name: 'Photo Doudou Premium (en pause)', price: 29.90 },
+                  'livre-histoire': { name: 'Livre d\'Histoire Personnalisé (en pause)', price: 24.90 },
                   'planche-bonus': { name: '1 Planche Bonus', price: 4.90 }
                 }
                 const upsell = upsellPrices[upsellId]

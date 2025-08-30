@@ -17,6 +17,11 @@ const isDemoMode = () => {
   return !apiKey || apiKey === 'votre_cle_resend_optionnelle'
 }
 
+// Email autorisé en mode test Resend
+const getTestEmail = () => {
+  return process.env.RESEND_TEST_EMAIL || 'go_tcha@hotmail.com'
+}
+
 // Types pour les données d'email
 interface OrderData {
   orderNumber: string
@@ -45,9 +50,13 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
 
     const resend = getResend()
     
+    // En mode développement, utiliser l'email de test autorisé
+    const recipientEmail = process.env.NODE_ENV === 'production' ? orderData.email : getTestEmail()
+    console.log(`📧 Envoi email client à: ${recipientEmail} ${recipientEmail !== orderData.email ? `(original: ${orderData.email})` : ''}`)
+    
     const { data, error } = await resend.emails.send({
-      from: 'Sticker DOUDOU <onboarding@resend.dev>',
-      to: [orderData.email],
+      from: 'Doudoudou <onboarding@resend.dev>',
+      to: [recipientEmail],
       subject: `✅ Commande confirmée - ${orderData.orderNumber}`,
       html: `
         <!DOCTYPE html>
@@ -55,7 +64,7 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Commande confirmée - Sticker DOUDOU</title>
+            <title>Commande confirmée - Doudoudou</title>
             <style>
               body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -104,11 +113,19 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
           </head>
           <body>
             <div class="header">
-              <h1><span class="emoji">🎨</span> Sticker DOUDOU</h1>
+              <h1><span class="emoji">🎨</span> Doudoudou</h1>
               <p>Votre commande a été confirmée avec succès !</p>
             </div>
             
             <div class="content">
+              ${recipientEmail !== orderData.email ? `
+                <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+                  <p style="margin: 0; color: #92400e; font-size: 14px;">
+                    <strong>🧪 MODE TEST :</strong> Cet email aurait dû être envoyé à <strong>${orderData.email}</strong>
+                  </p>
+                </div>
+              ` : ''}
+              
               <h2>Bonjour ! <span class="emoji">👋</span></h2>
               
               <p>Merci pour votre commande ! Nous avons bien reçu votre demande de transformation du doudou <strong class="highlight">${orderData.petName}</strong> en stickers personnalisés pour <strong class="highlight">${orderData.childName}</strong>.</p>
@@ -132,15 +149,15 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
               
               <p><span class="emoji">📧</span> <strong>Vous recevrez un email de confirmation dès que notre artiste aura terminé la création de vos stickers !</strong></p>
               
-              <p>Si vous avez des questions, n'hésitez pas à nous contacter à <a href="mailto:contact@stickerdoudou.fr" style="color: #ec4899;">contact@stickerdoudou.fr</a></p>
+              <p>Si vous avez des questions, n'hésitez pas à nous contacter à <a href="mailto:contact@doudoudoud.fr" style="color: #ec4899;">contact@doudoudoud.fr</a></p>
               
               <p>Merci de nous faire confiance ! <span class="emoji">❤️</span></p>
               
-              <p>L'équipe Sticker DOUDOU</p>
+              <p>L'équipe Doudoudou</p>
             </div>
             
             <div class="footer">
-              <p>© 2024 Sticker DOUDOU - Transformez les doudous en souvenirs magiques</p>
+              <p>© 2024 Doudoudou - Transformez les doudous en souvenirs magiques</p>
             </div>
           </body>
         </html>
@@ -163,9 +180,8 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
 // Template d'email pour l'artiste
 export async function sendArtistNotificationEmail(orderData: OrderData) {
   try {
-    // En mode test Resend, on peut seulement envoyer à notre propre email
-    // Donc l'artiste recevra sur l'email du client temporairement
-    const artistEmail = process.env.ARTIST_EMAIL || orderData.email
+    // Email de l'artiste (en mode test, sera remplacé par l'email autorisé)
+    const artistEmail = process.env.ARTIST_EMAIL || 'artiste@stickerdoudou.fr'
     
     // Mode démo si Resend n'est pas configuré
     if (isDemoMode()) {
@@ -182,9 +198,13 @@ export async function sendArtistNotificationEmail(orderData: OrderData) {
 
     const resend = getResend()
     
+    // En mode développement, utiliser l'email de test autorisé
+    const recipientEmail = process.env.NODE_ENV === 'production' ? artistEmail : getTestEmail()
+    console.log(`🎨 Envoi email artiste à: ${recipientEmail} ${recipientEmail !== artistEmail ? `(original: ${artistEmail})` : ''}`)
+    
     const { data, error } = await resend.emails.send({
-      from: 'Sticker DOUDOU <onboarding@resend.dev>',
-      to: [artistEmail],
+      from: 'Doudoudou <onboarding@resend.dev>',
+      to: [recipientEmail],
       subject: `🎨 Nouvelle commande à traiter - ${orderData.orderNumber}`,
       html: `
         <!DOCTYPE html>
@@ -263,11 +283,19 @@ export async function sendArtistNotificationEmail(orderData: OrderData) {
           </head>
           <body>
             <div class="header">
-              <h1><span class="emoji">🎨</span> Nouvelle Commande Sticker DOUDOU</h1>
+              <h1><span class="emoji">🎨</span> Nouvelle Commande Doudoudou</h1>
               <p>Une nouvelle commande vient d'être passée et attend votre talent !</p>
             </div>
             
             <div class="content">
+              ${recipientEmail !== artistEmail ? `
+                <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                  <p style="margin: 0; color: #92400e; font-size: 14px;">
+                    <strong>🧪 MODE TEST :</strong> Cet email aurait dû être envoyé à <strong>${artistEmail}</strong>
+                  </p>
+                </div>
+              ` : ''}
+              
               <div class="order-card urgent">
                 <h2><span class="emoji">🆕</span> Commande ${orderData.orderNumber}</h2>
                 <p><strong>Montant :</strong> <span class="highlight">${orderData.totalAmount.toFixed(2)} €</span></p>

@@ -53,8 +53,8 @@
   },
   "main": "public/electron.js",
   "build": {
-    "appId": "com.stickerDoudou.app",
-    "productName": "Sticker DOUDOU",
+    "appId": "com.doudoudou.app",
+    "productName": "Doudoudou",
     "directories": {
       "output": "dist"
     },

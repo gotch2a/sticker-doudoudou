@@ -1,0 +1,14 @@
+{
+  "tarif1": {
+    "name": "Livraison Standard",
+    "description": "Pour stickers uniquement (planche de base seule ou avec planche bonus)",
+    "price": 2.5,
+    "condition": "stickers_only"
+  },
+  "tarif2": {
+    "name": "Livraison Premium",
+    "description": "Avec photo ou livre (objets physiques supplémentaires)",
+    "price": 5.8,
+    "condition": "with_physical_products"
+  }
+}
