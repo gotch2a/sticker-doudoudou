@@ -99,14 +99,14 @@ export default function ConfirmationPage() {
 
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 relative overflow-hidden">
+    <main className="min-h-screen bg-gradient-to-br from-primary-50 via-warm-50 to-sage-50 relative overflow-hidden">
       {/* Confettis animés */}
       {confetti && (
         <div className="absolute inset-0 pointer-events-none">
           {[...Array(50)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute w-2 h-2 bg-pink-400 rounded-full"
+              className="absolute w-2 h-2 bg-primary-400 rounded-full"
               initial={{
                 x: Math.random() * 800,
                 y: -10,
@@ -153,7 +153,7 @@ export default function ConfirmationPage() {
           <p className="text-lg text-gray-600 mb-2">
             Votre numéro de commande :
           </p>
-          <p className="text-xl font-mono font-bold text-pink-600 bg-white px-4 py-2 rounded-lg inline-block shadow-md">
+          <p className="text-xl font-mono font-bold text-primary-600 bg-white px-4 py-2 rounded-lg inline-block shadow-md">
             {orderId}
           </p>
         </motion.div>
@@ -175,9 +175,9 @@ export default function ConfirmationPage() {
             </p>
           </div>
 
-          <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl p-4 mb-6">
+          <div className="bg-gradient-to-r from-primary-50 to-warm-50 rounded-xl p-4 mb-6">
             <div className="flex items-center gap-3 mb-3">
-              <Mail className="w-5 h-5 text-pink-600" />
+              <Mail className="w-5 h-5 text-primary-600" />
               <span className="font-medium text-gray-900">Email de confirmation envoyé</span>
             </div>
             <p className="text-sm text-gray-600">
@@ -200,7 +200,7 @@ export default function ConfirmationPage() {
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+              <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
                 2
               </div>
               <div>
@@ -212,7 +212,7 @@ export default function ConfirmationPage() {
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+              <div className="w-8 h-8 bg-sage-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
                 3
               </div>
               <div>
@@ -246,7 +246,7 @@ export default function ConfirmationPage() {
         >
           <div className="bg-white rounded-xl p-4 shadow-lg">
             <div className="flex items-center gap-3 mb-2">
-              <Calendar className="w-5 h-5 text-blue-600" />
+              <Calendar className="w-5 h-5 text-sage-600" />
               <span className="font-medium">Délai de livraison</span>
             </div>
             <p className="text-sm text-gray-600">
@@ -262,7 +262,7 @@ export default function ConfirmationPage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-6 border border-blue-200"
+          className="bg-gradient-to-r from-sage-50 to-primary-50 rounded-xl p-6 mb-6 border border-sage-200"
         >
           <div className="text-center">
             <div className="text-3xl mb-3">💝</div>
@@ -346,7 +346,7 @@ export default function ConfirmationPage() {
         >
           <Link 
             href="/"
-            className="flex-1 flex items-center justify-center gap-2 bg-pink-600 text-white py-3 px-6 rounded-xl font-medium hover:bg-pink-700 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 bg-primary-600 text-white py-3 px-6 rounded-xl font-medium hover:bg-primary-700 transition-colors"
           >
             <Home className="w-5 h-5" />
             Retour à l'accueil
@@ -354,7 +354,7 @@ export default function ConfirmationPage() {
           
           <Link 
             href="/commande"
-            className="flex-1 flex items-center justify-center gap-2 border border-pink-600 text-pink-600 py-3 px-6 rounded-xl font-medium hover:bg-pink-50 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 border border-primary-600 text-primary-600 py-3 px-6 rounded-xl font-medium hover:bg-primary-50 transition-colors"
           >
             <Heart className="w-5 h-5" />
             Commander pour un autre doudou
@@ -369,7 +369,7 @@ export default function ConfirmationPage() {
           className="text-center mt-8"
         >
           <p className="text-sm text-gray-500">
-            Une question ? Contactez-nous à <a href="mailto:hello@stickerdoudou.fr" className="text-pink-600 underline">hello@stickerdoudou.fr</a>
+            Une question ? Contactez-nous à <a href="mailto:hello@stickerdoudou.fr" className="text-primary-600 underline">hello@stickerdoudou.fr</a>
           </p>
         </motion.div>
       </div>

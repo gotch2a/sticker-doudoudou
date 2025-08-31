@@ -60,7 +60,6 @@ export interface Order {
   city: string
   postal_code: string
   number_of_sheets: number
-  price_per_sheet: number
   total_amount: number
   notes?: string
   status: 'nouveau' | 'en_cours' | 'termine' | 'expedie' | 'livre'
@@ -77,6 +76,33 @@ export interface AdminNote {
   note: string
   created_at: string
   created_by: string
+}
+
+export interface Article {
+  id: string
+  name: string
+  description: string
+  original_price: number
+  sale_price: number
+  savings: number
+  icon: string
+  badge?: string
+  popular: boolean
+  features: string[]
+  active: boolean
+  category: 'base' | 'upsell' | 'pack'
+  created_at: string
+  updated_at: string
+}
+
+export interface OrderArticle {
+  id: string
+  order_id: string
+  article_id: string
+  quantity: number
+  unit_price: number
+  total_price: number
+  created_at: string
 }
 
 // Fonctions utilitaires pour les commandes
@@ -98,8 +124,7 @@ export class OrderService {
     total_amount?: number
   }) {
     const orderNumber = `CMD-${Date.now()}`
-    const pricePerSheet = 12.90
-    const totalAmount = orderData.total_amount || (orderData.number_of_sheets * pricePerSheet)
+    const totalAmount = orderData.total_amount || 0
 
     const { data, error } = await supabase
       .from('orders')
@@ -115,7 +140,6 @@ export class OrderService {
         city: orderData.city,
         postal_code: orderData.postal_code,
         number_of_sheets: orderData.number_of_sheets,
-        price_per_sheet: pricePerSheet,
         total_amount: totalAmount,
         notes: orderData.notes || null,
         status: 'nouveau'
@@ -163,21 +187,76 @@ export class OrderService {
     return data
   }
 
-  // Mettre à jour le statut d'une commande
-  static async updateOrderStatus(orderId: string, status: Order['status']) {
-    const { data, error } = await supabase
-      .from('orders')
-      .update({ status })
-      .eq('id', orderId)
-      .select()
-      .single()
+  // Mettre à jour le statut d'une commande via fonction admin
+  static async updateOrderStatusAdmin(orderId: string, status: Order['status']) {
+    console.log(`🔧 Mise à jour admin statut commande ${orderId} vers: ${status}`)
+    
+    const { data, error } = await supabase.rpc('update_order_status_admin', {
+      order_id: orderId,
+      new_status: status
+    })
 
     if (error) {
-      console.error('❌ Erreur mise à jour statut:', error)
+      console.error('❌ Erreur fonction admin:', error)
       throw error
     }
 
-    return data
+    console.log('✅ Statut mis à jour via fonction admin:', data)
+    return { data, error: null }
+  }
+
+  // Mettre à jour le statut d'une commande (méthode classique)
+  static async updateOrderStatus(orderId: string, status: Order['status']) {
+    console.log(`🔄 Tentative mise à jour statut commande ${orderId} vers: ${status}`)
+    
+    // D'abord, vérifier si la commande existe
+    const { data: existingOrder, error: checkError } = await supabase
+      .from('orders')
+      .select('id, order_number, status')
+      .eq('id', orderId)
+      .single()
+
+    if (checkError) {
+      console.error('❌ Commande non trouvée:', {
+        orderId,
+        error: checkError.message,
+        code: checkError.code
+      })
+      throw new Error(`Commande non trouvée: ${orderId}`)
+    }
+
+    console.log('✅ Commande trouvée:', existingOrder)
+
+    // Maintenant, mettre à jour le statut
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ 
+        status,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', orderId)
+      .select()
+
+    if (error) {
+      console.error('❌ Erreur mise à jour statut:', error)
+      console.error('Détails erreur:', {
+        orderId,
+        newStatus: status,
+        errorCode: error.code,
+        errorMessage: error.message,
+        errorDetails: error.details
+      })
+      throw error
+    }
+
+    if (!data || data.length === 0) {
+      console.error('❌ Aucune ligne mise à jour')
+      throw new Error('Aucune ligne n\'a été mise à jour - vérifiez les permissions')
+    }
+
+    console.log(`✅ Statut commande ${orderId} mis à jour avec succès: ${existingOrder.status} → ${status}`)
+    console.log('📄 Données retournées:', data)
+    return data[0]
   }
 
   // Mettre à jour le statut de paiement
@@ -265,6 +344,8 @@ export class OrderService {
 
   // Ajouter une note admin
   static async addAdminNote(orderId: string, note: string, createdBy = 'admin') {
+    console.log(`📝 Tentative ajout note admin pour commande ${orderId}: ${note}`)
+    
     const { data, error } = await supabase
       .from('admin_notes')
       .insert({
@@ -277,9 +358,18 @@ export class OrderService {
 
     if (error) {
       console.error('❌ Erreur ajout note admin:', error)
+      console.error('Détails erreur note:', {
+        orderId,
+        note,
+        createdBy,
+        errorCode: error.code,
+        errorMessage: error.message,
+        errorDetails: error.details
+      })
       throw error
     }
 
+    console.log(`✅ Note admin ajoutée avec succès pour commande ${orderId}`)
     return data
   }
 
@@ -293,6 +383,145 @@ export class OrderService {
 
     if (error) {
       console.error('❌ Erreur récupération notes:', error)
+      throw error
+    }
+
+    return data
+  }
+
+  // Ajouter un article à une commande
+  static async addOrderArticle(orderId: string, articleId: string, quantity: number, unitPrice: number) {
+    const totalPrice = quantity * unitPrice
+
+    const { data, error } = await supabase
+      .from('order_articles')
+      .insert({
+        order_id: orderId,
+        article_id: articleId,
+        quantity: quantity,
+        unit_price: unitPrice,
+        total_price: totalPrice
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('❌ Erreur ajout article à la commande:', error)
+      throw error
+    }
+
+    return data
+  }
+
+  // Récupérer les articles d'une commande avec leurs détails
+  static async getOrderArticles(orderId: string) {
+    const { data, error } = await supabase
+      .from('order_articles')
+      .select(`
+        *,
+        articles:article_id (
+          id,
+          name,
+          description,
+          original_price,
+          sale_price,
+          icon,
+          badge,
+          category
+        )
+      `)
+      .eq('order_id', orderId)
+
+    if (error) {
+      console.error('❌ Erreur récupération articles de la commande:', error)
+      throw error
+    }
+
+    return data
+  }
+
+  // Récupérer tous les articles disponibles
+  static async getAllArticles() {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .eq('active', true)
+      .order('category', { ascending: true })
+
+    if (error) {
+      console.error('❌ Erreur récupération articles:', error)
+      throw error
+    }
+
+    return data
+  }
+
+  // Récupérer un article par son ID
+  static async getArticleById(articleId: string) {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .eq('id', articleId)
+      .single()
+
+    if (error) {
+      console.error('❌ Erreur récupération article:', error)
+      throw error
+    }
+
+    return data
+  }
+
+  // Mettre à jour un article
+  static async updateArticle(id: string, updates: Partial<Article>) {
+    const { data, error } = await supabase
+      .from('articles')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('❌ Erreur mise à jour article:', error)
+      throw error
+    }
+
+    return data
+  }
+
+  // Créer un nouvel article
+  static async createArticle(article: Omit<Article, 'id' | 'created_at' | 'updated_at'>) {
+    const { data, error } = await supabase
+      .from('articles')
+      .insert(article)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('❌ Erreur création article:', error)
+      throw error
+    }
+
+    return data
+  }
+
+  // Supprimer un article (soft delete en désactivant)
+  static async deleteArticle(id: string) {
+    const { data, error } = await supabase
+      .from('articles')
+      .update({ 
+        active: false,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('❌ Erreur suppression article:', error)
       throw error
     }
 

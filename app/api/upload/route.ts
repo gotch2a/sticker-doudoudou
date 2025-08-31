@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 import crypto from 'crypto'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 
 
@@ -72,6 +78,29 @@ export async function POST(request: NextRequest) {
     const secureUrl = `/api/photos/${fileName}?token=${token}`
     
     console.log('✅ Upload réel avec succès:', fileName)
+    
+    // Enregistrer les métadonnées dans la table photos
+    try {
+      const { data: photoData, error: photoError } = await supabase
+        .from('photos')
+        .insert({
+          filename: fileName,
+          original_name: file.name,
+          file_size: file.size,
+          mime_type: file.type,
+          is_active: true
+        })
+        .select()
+        .single()
+
+      if (photoError) {
+        console.error('❌ Erreur enregistrement métadonnées:', photoError)
+      } else {
+        console.log('✅ Métadonnées enregistrées:', photoData.id)
+      }
+    } catch (error) {
+      console.error('❌ Erreur enregistrement métadonnées:', error)
+    }
     
     return NextResponse.json({
       success: true,

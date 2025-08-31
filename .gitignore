@@ -30,7 +30,7 @@ yarn-error.log*
 .env
 
 # uploads (photos privées)
-/uploads/photos/
+
 uploads/
 
 # logs

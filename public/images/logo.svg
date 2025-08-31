@@ -1,41 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
   <defs>
     <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#ff6b9d;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#a8e6cf;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#ffd93d;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#8B7355;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#A0956B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#9CAF88;stop-opacity:1" />
     </linearGradient>
   </defs>
   
   <!-- Cute teddy bear icon -->
   <g transform="translate(10, 10)">
     <!-- Bear body -->
-    <ellipse cx="20" cy="25" rx="15" ry="18" fill="#f4a261" opacity="0.9"/>
+    <ellipse cx="20" cy="25" rx="15" ry="18" fill="#C4B5A0" opacity="0.9"/>
     
     <!-- Bear head -->
-    <circle cx="20" cy="15" r="12" fill="#f4a261"/>
+    <circle cx="20" cy="15" r="12" fill="#C4B5A0"/>
     
     <!-- Ears -->
-    <circle cx="12" cy="8" r="5" fill="#e76f51"/>
-    <circle cx="28" cy="8" r="5" fill="#e76f51"/>
-    <circle cx="12" cy="8" r="3" fill="#2a9d8f"/>
-    <circle cx="28" cy="8" r="3" fill="#2a9d8f"/>
+    <circle cx="12" cy="8" r="5" fill="#B5A082"/>
+    <circle cx="28" cy="8" r="5" fill="#B5A082"/>
+    <circle cx="12" cy="8" r="3" fill="#9CAF88"/>
+    <circle cx="28" cy="8" r="3" fill="#9CAF88"/>
     
     <!-- Eyes -->
-    <circle cx="16" cy="13" r="2" fill="#264653"/>
-    <circle cx="24" cy="13" r="2" fill="#264653"/>
+    <circle cx="16" cy="13" r="2" fill="#5D4E37"/>
+    <circle cx="24" cy="13" r="2" fill="#5D4E37"/>
     <circle cx="17" cy="12" r="0.8" fill="white"/>
     <circle cx="25" cy="12" r="0.8" fill="white"/>
     
     <!-- Nose -->
-    <ellipse cx="20" cy="17" rx="1.5" ry="1" fill="#264653"/>
+    <ellipse cx="20" cy="17" rx="1.5" ry="1" fill="#5D4E37"/>
     
     <!-- Mouth -->
-    <path d="M 18 19 Q 20 21 22 19" stroke="#264653" stroke-width="1" fill="none"/>
+    <path d="M 18 19 Q 20 21 22 19" stroke="#5D4E37" stroke-width="1" fill="none"/>
     
     <!-- Arms -->
-    <circle cx="8" cy="22" r="6" fill="#f4a261"/>
-    <circle cx="32" cy="22" r="6" fill="#f4a261"/>
+    <circle cx="8" cy="22" r="6" fill="#C4B5A0"/>
+    <circle cx="32" cy="22" r="6" fill="#C4B5A0"/>
   </g>
   
   <!-- Text "Doudoudou" -->
@@ -43,9 +43,9 @@
     Doudoudou
   </text>
   
-  <!-- Small hearts decoration -->
-  <g fill="#ff6b9d" opacity="0.6">
-    <path d="M 170 15 C 170 12, 172 10, 175 10 C 178 10, 180 12, 180 15 C 180 18, 175 23, 175 23 C 175 23, 170 18, 170 15 Z"/>
-    <path d="M 180 25 C 180 23, 181.5 22, 183 22 C 184.5 22, 186 23, 186 25 C 186 27, 183 30, 183 30 C 183 30, 180 27, 180 25 Z"/>
+  <!-- Small leaf decoration -->
+  <g fill="#9CAF88" opacity="0.7">
+    <path d="M 170 15 C 170 12, 172 10, 175 10 C 178 10, 180 12, 180 15 C 180 18, 175 20, 175 20 C 175 20, 170 18, 170 15 Z"/>
+    <path d="M 180 25 C 180 23, 181.5 22, 183 22 C 184.5 22, 186 23, 186 25 C 186 27, 183 28, 183 28 C 183 28, 180 27, 180 25 Z"/>
   </g>
 </svg>

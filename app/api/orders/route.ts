@@ -72,23 +72,42 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Calcul du prix avec les paramètres dynamiques
-    const basePricePerSheet = serverProductSettingsService.getBasePlanchePrice()
-    const basePrice = orderData.numberOfSheets * basePricePerSheet
+    // Récupérer les articles depuis Supabase
+    const allArticles = await OrderService.getAllArticles()
+    const articlesToAdd: Array<{id: string, quantity: number, price: number}> = []
+    
+    // Article de base (planche)
+    const baseArticle = allArticles.find(a => a.category === 'base')
+    if (!baseArticle) {
+      throw new Error('Article de base non trouvé dans la base de données')
+    }
+    
+    const basePrice = orderData.numberOfSheets * baseArticle.sale_price
+    articlesToAdd.push({
+      id: baseArticle.id,
+      quantity: orderData.numberOfSheets,
+      price: baseArticle.sale_price
+    })
+    
+    console.log(`💰 Prix planche de base: ${baseArticle.sale_price}€ (${orderData.numberOfSheets} × ${baseArticle.sale_price}€ = ${basePrice}€)`)
+    
     let upsellTotal = 0
     let upsellDetails = ''
     
-    console.log(`💰 Prix planche de base: ${basePricePerSheet}€ (${orderData.numberOfSheets} × ${basePricePerSheet}€ = ${basePrice}€)`)
-    
+    // Traiter les upsells depuis Supabase
     if (orderData.upsells && orderData.upsells.length > 0) {
       orderData.upsells.forEach(upsellId => {
-        const price = serverProductSettingsService.getProductPrice(upsellId)
-        const product = serverProductSettingsService.getProduct(upsellId)
+        const upsellArticle = allArticles.find(a => a.id === upsellId && a.active)
         
-        if (price > 0 && product) {
-          upsellTotal += price
-          upsellDetails += `\n+ ${product.name}: ${price.toFixed(2)}€`
-          console.log(`💰 Upsell ${upsellId}: ${price}€`)
+        if (upsellArticle) {
+          upsellTotal += upsellArticle.sale_price
+          upsellDetails += `\n+ ${upsellArticle.name}: ${upsellArticle.sale_price.toFixed(2)}€`
+          articlesToAdd.push({
+            id: upsellArticle.id,
+            quantity: 1,
+            price: upsellArticle.sale_price
+          })
+          console.log(`💰 Upsell ${upsellId}: ${upsellArticle.sale_price}€`)
         } else {
           console.warn(`⚠️ Produit upsell non trouvé ou inactif: ${upsellId}`)
         }
@@ -136,6 +155,18 @@ export async function POST(request: NextRequest) {
     })
 
     console.log('✅ Commande créée en base:', newOrder.order_number, 'Total:', newOrder.total_amount, '€')
+
+    // Ajouter les articles à la commande dans order_articles
+    console.log('📦 Ajout des articles à la commande...')
+    for (const article of articlesToAdd) {
+      await OrderService.addOrderArticle(
+        newOrder.id,
+        article.id,
+        article.quantity,
+        article.price
+      )
+      console.log(`✅ Article ajouté: ${article.id} x${article.quantity} à ${article.price}€`)
+    }
 
     // Ajouter une note automatique pour l'artiste
     const briefNote = `🎨 NOUVEAU BRIEF ARTISTE

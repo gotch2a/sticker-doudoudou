@@ -18,7 +18,7 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#0ea5e9',
+  themeColor: '#8b7355',
 }
 
 export default function RootLayout({
@@ -29,10 +29,10 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <head>
-        <meta name="theme-color" content="#0ea5e9" />
+        <meta name="theme-color" content="#8b7355" />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-sage-50">
           {children}
         </div>
       </body>

@@ -56,11 +56,11 @@ export default function ConfidentialitePage() {
             </ul>
 
             <h2>3. Partage des Données</h2>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 my-4">
-              <p className="text-blue-800 font-medium">
+            <div className="bg-sage-50 border border-sage-200 rounded-lg p-4 my-4">
+              <p className="text-sage-800 font-medium"
                 🔒 Vos données ne sont partagées qu'avec :
               </p>
-              <ul className="text-blue-700 mt-2">
+              <ul className="text-sage-700 mt-2">
                 <li>Notre artiste (brief de création uniquement)</li>
                 <li>PayPal (paiement sécurisé)</li>
                 <li>La Poste (livraison)</li>
@@ -149,14 +149,14 @@ export default function ConfidentialitePage() {
             </p>
 
             <h2>10. Contact DPO</h2>
-            <div className="bg-pink-50 border border-pink-200 rounded-lg p-6 mt-8">
-              <h3 className="text-pink-800 font-semibold mb-2">
+            <div className="bg-primary-50 border border-primary-200 rounded-lg p-6 mt-8">
+              <h3 className="text-primary-800 font-semibold mb-2">
                 Exercer vos droits ou poser une question
               </h3>
-              <p className="text-pink-700 mb-3">
+              <p className="text-primary-700 mb-3">
                 Contactez notre délégué à la protection des données :
               </p>
-              <div className="text-pink-700">
+              <div className="text-primary-700">
                 <p><strong>Email :</strong> dpo@doudoudoud.fr</p>
                 <p><strong>Courrier :</strong> DPO Doudoudou, [Adresse]</p>
                 <p><strong>Délai de réponse :</strong> 30 jours maximum</p>
@@ -167,7 +167,7 @@ export default function ConfidentialitePage() {
               <p className="text-gray-600 text-sm">
                 <strong>Autorité de contrôle :</strong> En cas de litige, vous pouvez 
                 saisir la CNIL (Commission Nationale de l'Informatique et des Libertés) 
-                via <a href="https://cnil.fr" className="text-pink-600 underline">cnil.fr</a>
+                via <a href="https://cnil.fr" className="text-primary-600 underline">cnil.fr</a>
               </p>
             </div>
           </div>

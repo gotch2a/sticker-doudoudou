@@ -131,6 +131,13 @@ export default function PreCommandePage() {
     }
   }
 
+  // Fonction pour calculer le pourcentage de remise dynamiquement
+  const calculateDiscountPercentage = (originalPrice: number, salePrice: number): string => {
+    if (originalPrice <= salePrice) return ''
+    const discount = ((originalPrice - salePrice) / originalPrice) * 100
+    return `-${Math.round(discount)}%`
+  }
+
   // Prix de base
   const [basePricePerSheet, setBasePricePerSheet] = useState(12.90)
   const basePrice = numberOfSheets * basePricePerSheet
@@ -230,13 +237,13 @@ export default function PreCommandePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50">
+    <main className="min-h-screen bg-gradient-to-br from-primary-50 via-warm-50 to-sage-50">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* En-tête */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-purple-100 p-4 rounded-full">
-              <Gift className="w-8 h-8 text-purple-600" />
+            <div className="bg-primary-100 p-4 rounded-full">
+              <Gift className="w-8 h-8 text-primary-600" />
             </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
@@ -245,8 +252,8 @@ export default function PreCommandePage() {
           <p className="text-lg text-gray-600 mb-4">
             Ajoutez ces produits exclusifs à votre commande pour <strong>{childName}</strong>
           </p>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 inline-block">
-            <p className="text-sm text-blue-800">
+          <div className="bg-sage-50 border border-sage-200 rounded-lg p-4 mb-6 inline-block">
+            <p className="text-sm text-sage-800">
               <Sparkles className="w-4 h-4 inline mr-2" />
               <strong>Livraison groupée :</strong> Tout arrive dans le même colis !
             </p>
@@ -260,8 +267,8 @@ export default function PreCommandePage() {
           </h2>
           <div className="flex items-center justify-between py-3 border-b border-gray-200">
             <div className="flex items-center gap-3">
-              <div className="bg-purple-100 p-2 rounded-lg">
-                <Heart className="w-5 h-5 text-purple-600" />
+              <div className="bg-primary-100 p-2 rounded-lg">
+                <Heart className="w-5 h-5 text-primary-600" />
               </div>
               <div>
                 <h3 className="font-medium text-gray-800">
@@ -270,7 +277,7 @@ export default function PreCommandePage() {
                 <p className="text-sm text-gray-600">{numberOfSheets} planche(s)</p>
               </div>
             </div>
-            <span className="font-bold text-purple-600">{basePrice.toFixed(2)}€</span>
+            <span className="font-bold text-primary-600">{basePrice.toFixed(2)}€</span>
           </div>
         </div>
 
@@ -291,7 +298,7 @@ export default function PreCommandePage() {
                   className={`relative bg-white rounded-xl shadow-lg border-2 transition-all cursor-pointer transform hover:scale-105 ${
                     isSelected 
                       ? 'border-green-500 ring-4 ring-green-200' 
-                      : 'border-gray-200 hover:border-purple-300'
+                      : 'border-gray-200 hover:border-primary-300'
                   } ${product.popular ? 'ring-2 ring-yellow-400' : ''}`}
                   onClick={() => handleProductToggle(product.id)}
                 >
@@ -306,11 +313,18 @@ export default function PreCommandePage() {
                   )}
 
                   {/* Badge promo */}
-                  {product.badge && !product.popular && (
-                    <div className="absolute top-4 right-4 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-bold">
-                      {product.badge}
-                    </div>
-                  )}
+                  {(() => {
+                    const discountPercentage = calculateDiscountPercentage(product.originalPrice, product.salePrice)
+                    return discountPercentage ? (
+                      <div className="absolute top-4 right-4 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-bold">
+                        {discountPercentage}
+                      </div>
+                    ) : product.badge && !product.popular ? (
+                      <div className="absolute top-4 right-4 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-bold">
+                        {product.badge}
+                      </div>
+                    ) : null
+                  })()}
 
                   {/* Icône de sélection */}
                   <div className="absolute top-4 left-4">
@@ -326,8 +340,8 @@ export default function PreCommandePage() {
                   <div className="p-6 pt-12">
                     {/* Icône et titre */}
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="bg-purple-100 p-3 rounded-lg">
-                        <Icon className="w-6 h-6 text-purple-600" />
+                      <div className="bg-primary-100 p-3 rounded-lg">
+                        <Icon className="w-6 h-6 text-primary-600" />
                       </div>
                       <div>
                         <h3 className="font-bold text-lg text-gray-800">{product.name}</h3>
@@ -338,23 +352,27 @@ export default function PreCommandePage() {
                     {/* Prix */}
                     <div className="mb-4">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-2xl font-bold text-purple-600">
+                        <span className="text-2xl font-bold text-primary-600">
                           {product.salePrice.toFixed(2)}€
                         </span>
-                        <span className="text-sm text-gray-500 line-through">
-                          {product.originalPrice.toFixed(2)}€
-                        </span>
+                        {product.originalPrice > product.salePrice && (
+                          <span className="text-sm text-gray-500 line-through">
+                            {product.originalPrice.toFixed(2)}€
+                          </span>
+                        )}
                       </div>
-                      <p className="text-sm text-green-600 font-medium">
-                        Économisez {product.savings.toFixed(2)}€ !
-                      </p>
+                      {product.savings > 0 && (
+                        <p className="text-sm text-green-600 font-medium">
+                          Économisez {product.savings.toFixed(2)}€ !
+                        </p>
+                      )}
                     </div>
 
                     {/* Caractéristiques */}
                     <ul className="space-y-2 mb-6">
                       {product.features.map((feature, index) => (
                         <li key={index} className="flex items-center gap-2 text-sm text-gray-600">
-                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                          <div className="w-1.5 h-1.5 bg-primary-500 rounded-full"></div>
                           {feature}
                         </li>
                       ))}
@@ -364,7 +382,7 @@ export default function PreCommandePage() {
                     <div className={`w-full p-3 rounded-lg border-2 transition-colors ${
                       isSelected 
                         ? 'border-green-500 bg-green-50' 
-                        : 'border-gray-300 hover:border-purple-400'
+                        : 'border-gray-300 hover:border-primary-400'
                     }`}>
                       <div className="text-center">
                         {isSelected ? (
@@ -373,7 +391,7 @@ export default function PreCommandePage() {
                             Ajouté au panier
                           </span>
                         ) : (
-                          <span className="text-purple-600 font-medium flex items-center justify-center gap-2">
+                          <span className="text-primary-600 font-medium flex items-center justify-center gap-2">
                             <Plus className="w-4 h-4" />
                             Ajouter au panier
                           </span>
@@ -504,15 +522,15 @@ export default function PreCommandePage() {
               <p className="text-sm text-gray-600">Matériaux de haute qualité, satisfaction garantie</p>
             </div>
             <div>
-              <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Sparkles className="w-6 h-6 text-blue-600" />
+              <div className="bg-sage-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Sparkles className="w-6 h-6 text-sage-600" />
               </div>
               <h4 className="font-bold text-gray-800 mb-2">Livraison Groupée</h4>
               <p className="text-sm text-gray-600">Tout dans le même colis, économique et pratique</p>
             </div>
             <div>
-              <div className="bg-purple-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Crown className="w-6 h-6 text-purple-600" />
+              <div className="bg-primary-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Crown className="w-6 h-6 text-primary-600" />
               </div>
               <h4 className="font-bold text-gray-800 mb-2">Offre Exclusive</h4>
               <p className="text-sm text-gray-600">Prix spéciaux disponibles uniquement ici</p>

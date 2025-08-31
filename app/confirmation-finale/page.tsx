@@ -67,7 +67,7 @@ export default function ConfirmationFinalePage() {
   const upsellDetails = getUpsellDetails(upsellProduct)
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 relative overflow-hidden">
+    <main className="min-h-screen bg-gradient-to-br from-sage-50 via-primary-50 to-warm-50 relative overflow-hidden">
       {/* Confettis animés */}
       {confetti && (
         <div className="absolute inset-0 pointer-events-none">
@@ -113,15 +113,15 @@ export default function ConfirmationFinalePage() {
               {/* Commande principale */}
               <div className="flex items-center justify-between py-4 border-b border-gray-200">
                 <div className="flex items-center gap-4">
-                  <div className="bg-purple-100 p-3 rounded-lg">
-                    <Heart className="w-6 h-6 text-purple-600" />
+                  <div className="bg-primary-100 p-3 rounded-lg">
+                    <Heart className="w-6 h-6 text-primary-600" />
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-800">Stickers Doudou Personnalisés</h3>
                     <p className="text-sm text-gray-600">Commande #{orderNumber}</p>
                   </div>
                 </div>
-                <span className="font-bold text-purple-600">12,90€</span>
+                <span className="font-bold text-primary-600">12,90€</span>
               </div>
 
               {/* Upsell si ajouté */}

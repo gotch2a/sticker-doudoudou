@@ -116,7 +116,7 @@ export default function CommandePage() {
       let photoFileName = ''
       if (formData.photo) {
         const uploadFormData = new FormData()
-        uploadFormData.append('file', formData.photo)
+        uploadFormData.append('photo', formData.photo)
 
         const uploadResponse = await fetch('/api/upload', {
           method: 'POST',
@@ -125,7 +125,7 @@ export default function CommandePage() {
 
         if (uploadResponse.ok) {
           const uploadResult = await uploadResponse.json()
-          photoFileName = uploadResult.filename
+          photoFileName = uploadResult.fileName
         }
       }
 
@@ -183,7 +183,7 @@ export default function CommandePage() {
   }, [])
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
+    <main className="min-h-screen bg-gradient-to-br from-primary-50 via-warm-50 to-sage-50">
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
@@ -225,7 +225,7 @@ export default function CommandePage() {
                     ? 'border-green-300 bg-green-50' 
                     : errors.photo 
                     ? 'border-red-300 bg-red-50' 
-                    : 'border-gray-300 bg-gray-50 hover:border-pink-300 hover:bg-pink-50'
+                    : 'border-gray-300 bg-gray-50 hover:border-primary-300 hover:bg-primary-50'
                 }`}
               >
                 {photoPreview ? (
@@ -285,7 +285,7 @@ export default function CommandePage() {
                 placeholder="Ex: Nounours, Pinky, Gros Câlin..."
                 className={`w-full px-4 py-3 rounded-xl border ${
                   errors.petName ? 'border-red-300' : 'border-gray-300'
-                } focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-colors`}
+                } focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors`}
               />
               {errors.petName && (
                 <span className="text-red-600 text-sm mt-1">{errors.petName}</span>
@@ -303,7 +303,7 @@ export default function CommandePage() {
                 placeholder="Ex: lion, poulpe, carotte, voiture, dragon..."
                 className={`w-full px-4 py-3 rounded-xl border ${
                   errors.animalType ? 'border-red-300' : 'border-gray-300'
-                } focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-colors`}
+                } focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors`}
               />
               {errors.animalType && (
                 <span className="text-red-600 text-sm mt-1">{errors.animalType}</span>
@@ -333,7 +333,7 @@ export default function CommandePage() {
                 placeholder="Le prénom de votre petit bout"
                 className={`w-full px-4 py-3 rounded-xl border ${
                   errors.childName ? 'border-red-300' : 'border-gray-300'
-                } focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-colors`}
+                } focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors`}
               />
               {errors.childName && (
                 <span className="text-red-600 text-sm mt-1">{errors.childName}</span>
@@ -349,7 +349,7 @@ export default function CommandePage() {
                 onChange={(e) => setFormData({ ...formData, childAge: e.target.value })}
                 className={`w-full px-4 py-3 rounded-xl border ${
                   errors.childAge ? 'border-red-300' : 'border-gray-300'
-                } focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-colors`}
+                } focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors`}
               >
                 <option value="">Sélectionner l'âge</option>
                 <option value="0-12mois">0-12 mois (bébé)</option>
@@ -376,7 +376,7 @@ export default function CommandePage() {
                 placeholder="Numéro et nom de rue"
                 className={`w-full px-4 py-3 rounded-xl border ${
                   errors.address ? 'border-red-300' : 'border-gray-300'
-                } focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-colors`}
+                } focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors`}
               />
               {errors.address && (
                 <span className="text-red-600 text-sm mt-1">{errors.address}</span>
@@ -395,7 +395,7 @@ export default function CommandePage() {
                   placeholder="Votre ville"
                   className={`w-full px-4 py-3 rounded-xl border ${
                     errors.city ? 'border-red-300' : 'border-gray-300'
-                  } focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-colors`}
+                  } focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors`}
                 />
                 {errors.city && (
                   <span className="text-red-600 text-sm mt-1">{errors.city}</span>
@@ -413,7 +413,7 @@ export default function CommandePage() {
                   placeholder="75001"
                   className={`w-full px-4 py-3 rounded-xl border ${
                     errors.postalCode ? 'border-red-300' : 'border-gray-300'
-                  } focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-colors`}
+                  } focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors`}
                 />
                 {errors.postalCode && (
                   <span className="text-red-600 text-sm mt-1">{errors.postalCode}</span>
@@ -432,7 +432,7 @@ export default function CommandePage() {
                 placeholder="votre@email.fr"
                 className={`w-full px-4 py-3 rounded-xl border ${
                   errors.email ? 'border-red-300' : 'border-gray-300'
-                } focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-colors`}
+                } focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors`}
               />
               {errors.email && (
                 <span className="text-red-600 text-sm mt-1">{errors.email}</span>
@@ -456,7 +456,7 @@ export default function CommandePage() {
                 Nombre de planches
               </label>
               <div className="flex items-center gap-4">
-                <span className="text-xl font-semibold text-pink-600 bg-pink-50 px-4 py-2 rounded-lg">
+                <span className="text-xl font-semibold text-primary-600 bg-primary-50 px-4 py-2 rounded-lg">
                   1 planche incluse
                 </span>
                 <span className="text-sm text-gray-500">
@@ -498,7 +498,7 @@ export default function CommandePage() {
             </div>
             <div className="flex justify-between items-center pt-4 border-t-2 border-gray-200">
               <span className="text-lg font-semibold text-gray-900">Total</span>
-              <span className="text-2xl font-bold text-pink-600">{totalPrice.toFixed(2)}€</span>
+              <span className="text-2xl font-bold text-primary-600">{totalPrice.toFixed(2)}€</span>
             </div>
             
             <div className="space-y-4 mt-6">
@@ -507,11 +507,11 @@ export default function CommandePage() {
                   type="checkbox"
                   checked={formData.consent}
                   onChange={(e) => setFormData({ ...formData, consent: e.target.checked })}
-                  className="mt-1 w-5 h-5 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+                  className="mt-1 w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                 />
                 <span className="text-sm text-gray-600">
-                  J'accepte les <Link href="/cgv" className="text-pink-600 underline">conditions générales</Link> et 
-                  la <Link href="/confidentialite" className="text-pink-600 underline">politique de confidentialité</Link>. 
+                  J'accepte les <Link href="/cgv" className="text-primary-600 underline">conditions générales</Link> et 
+                  la <Link href="/confidentialite" className="text-primary-600 underline">politique de confidentialité</Link>. 
                   Je confirme que cette photo ne contient pas de personnages sous droits d'auteur.
                 </span>
               </label>
@@ -540,7 +540,7 @@ export default function CommandePage() {
               className={`w-full py-4 px-6 rounded-xl text-white font-semibold transition-all transform ${
                 isLoading || paypalLoading
                   ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'bg-pink-600 hover:bg-pink-700 hover:scale-105 shadow-lg hover:shadow-xl'
+                  : 'bg-primary-600 hover:bg-primary-700 hover:scale-105 shadow-lg hover:shadow-xl'
               }`}
             >
               {isLoading || paypalLoading ? (

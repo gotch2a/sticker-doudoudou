@@ -77,7 +77,7 @@ export default function CGVPage() {
             <h2>9. Données Personnelles</h2>
             <p>
               Les données collectées sont utilisées uniquement pour le traitement de la commande. 
-              Voir notre <Link href="/confidentialite" className="text-pink-600 underline">politique de confidentialité</Link>.
+              Voir notre <Link href="/confidentialite" className="text-primary-600 underline">politique de confidentialité</Link>.
             </p>
 
             <h2>10. Responsabilité</h2>
@@ -98,9 +98,9 @@ export default function CGVPage() {
               des tribunaux français.
             </p>
 
-            <div className="mt-12 p-6 bg-pink-50 rounded-lg">
-              <h3 className="text-pink-800 font-semibold mb-2">Contact</h3>
-              <p className="text-pink-700">
+            <div className="mt-12 p-6 bg-primary-50 rounded-lg">
+              <h3 className="text-primary-800 font-semibold mb-2">Contact</h3>
+              <p className="text-primary-700">
                 Pour toute question concernant ces conditions :<br/>
                 <strong>Email :</strong> hello@stickerdoudou.fr<br/>
                 <strong>Téléphone :</strong> [Votre numéro]

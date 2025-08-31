@@ -27,7 +27,7 @@ body {
 
 .btn:focus {
   outline: none;
-  box-shadow: 0 0 0 2px #ec4899;
+  box-shadow: 0 0 0 2px #a0956b;
 }
 
 .btn:disabled {
@@ -36,12 +36,12 @@ body {
 }
 
 .btn-primary {
-  background-color: #ec4899;
+  background-color: #8b7355;
   color: white;
 }
 
 .btn-primary:hover {
-  background-color: #be185d;
+  background-color: #735f47;
 }
 
 .btn-secondary {
