@@ -33,17 +33,56 @@ interface OrderData {
   totalAmount: number
   photoUrl?: string
   notes?: string
+  orderId?: string // ID de la commande pour récupérer les articles
 }
 
 // Template d'email pour le client
 export async function sendClientConfirmationEmail(orderData: OrderData) {
   try {
+    // Récupérer les articles de la commande si orderId est fourni
+    let orderArticles: any[] = []
+    let upsellsHtml = ''
+    
+    if (orderData.orderId) {
+      try {
+        const { OrderService } = await import('./supabase')
+        orderArticles = await OrderService.getOrderArticles(orderData.orderId)
+        
+        // Séparer les articles de base des upsells
+        const baseArticles = orderArticles.filter(item => item.articles?.category === 'base')
+        const upsellArticles = orderArticles.filter(item => item.articles?.category === 'upsell')
+        
+        if (upsellArticles.length > 0) {
+          upsellsHtml = `
+            <h3><span class="emoji">🎁</span> Produits bonus inclus</h3>
+            <div class="upsells-list">
+              ${upsellArticles.map(item => `
+                <div class="upsell-item">
+                  <span class="upsell-name">${item.articles.name}</span>
+                  <span class="upsell-price">${item.total_price.toFixed(2)} €</span>
+                </div>
+              `).join('')}
+            </div>
+          `
+        }
+      } catch (error) {
+        console.error('⚠️ Erreur récupération articles pour email:', error)
+        // Continuer sans les détails des upsells
+      }
+    }
+
     // Mode démo si Resend n'est pas configuré
     if (isDemoMode()) {
       console.log('📧 MODE DÉMO - Email client simulé:')
       console.log(`  ✉️  Destinataire: ${orderData.email}`)
       console.log(`  📝 Sujet: ✅ Commande confirmée - ${orderData.orderNumber}`)
       console.log(`  💰 Montant: ${orderData.totalAmount.toFixed(2)} €`)
+      if (orderArticles.length > 0) {
+        console.log(`  🎁 Upsells: ${orderArticles.filter(item => item.articles?.category === 'upsell').map(item => item.articles.name).join(', ') || 'Aucun'}`)
+      }
+      if (orderData.notes) {
+        console.log(`  💭 Notes: "${orderData.notes}"`)
+      }
       console.log(`  🎯 Pour activer les vrais emails, configurez RESEND_API_KEY dans .env.local`)
       return { success: true, emailId: 'demo_client_' + Date.now() }
     }
@@ -109,6 +148,27 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
               .emoji {
                 font-size: 1.2em;
               }
+              .upsells-list {
+                margin: 15px 0;
+              }
+              .upsell-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px;
+                background: #f0f9ff;
+                border-left: 3px solid #ec4899;
+                margin: 8px 0;
+                border-radius: 4px;
+              }
+              .upsell-name {
+                font-weight: 500;
+                color: #1f2937;
+              }
+              .upsell-price {
+                font-weight: bold;
+                color: #ec4899;
+              }
             </style>
           </head>
           <body>
@@ -138,6 +198,15 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
                 <p><strong>Nombre de planches :</strong> ${orderData.numberOfSheets}</p>
                 <p><strong>Montant total :</strong> <span class="highlight">${orderData.totalAmount.toFixed(2)} €</span></p>
               </div>
+              
+              ${upsellsHtml}
+              
+              ${orderData.notes ? `
+                <h3><span class="emoji">💭</span> Vos commentaires</h3>
+                <div class="order-details">
+                  <p style="font-style: italic; color: #6b7280;">"${orderData.notes}"</p>
+                </div>
+              ` : ''}
               
               <h3><span class="emoji">⏰</span> Prochaines étapes</h3>
               <ol>

@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     try {
       const baseUrl = process.env.NODE_ENV === 'production' 
         ? 'https://votre-domaine.com' 
-        : `http://localhost:3000`
+        : 'http://localhost:3000'
       
       const emailResults = await sendOrderConfirmationEmails({
         orderNumber: order.order_number,
@@ -87,7 +87,8 @@ export async function POST(request: NextRequest) {
         numberOfSheets: order.number_of_sheets,
         totalAmount: order.total_amount,
         photoUrl: order.photo_url ? `${baseUrl}${order.photo_url}` : undefined,
-        notes: order.admin_notes || undefined
+        notes: order.admin_notes || undefined,
+        orderId: order.id
       })
       
       console.log('📧 Résultats envoi emails:', emailResults)

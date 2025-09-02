@@ -445,7 +445,6 @@ export class OrderService {
     const { data, error } = await supabase
       .from('articles')
       .select('*')
-      .eq('active', true)
       .order('category', { ascending: true })
 
     if (error) {

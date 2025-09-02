@@ -57,7 +57,7 @@ export default function ConfidentialitePage() {
 
             <h2>3. Partage des Données</h2>
             <div className="bg-sage-50 border border-sage-200 rounded-lg p-4 my-4">
-              <p className="text-sage-800 font-medium"
+              <p className="text-sage-800 font-medium">
                 🔒 Vos données ne sont partagées qu'avec :
               </p>
               <ul className="text-sage-700 mt-2">

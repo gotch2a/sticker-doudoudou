@@ -95,7 +95,7 @@ const defaultProducts: ProductSettings[] = [
     savings: 10.00,
     icon: '📖',
     badge: 'Populaire',
-    active: false,
+    active: true,
     category: 'upsell',
     features: ['8-10 pages d\'histoire', 'Illustrations personnalisées', 'Prénom intégré dans l\'histoire', 'Couverture rigide', 'Format 21x21cm']
   }

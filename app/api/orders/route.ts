@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { OrderService } from '@/lib/supabase'
 import { serverProductSettingsService } from '@/lib/serverProductSettings'
 import { serverShippingSettingsService } from '@/lib/serverShippingSettings'
-import { sendOrderConfirmationEmails } from '@/lib/email'
+// import { sendOrderConfirmationEmails } from '@/lib/email' // ✅ Emails envoyés depuis /api/paypal/capture
 
 // Configuration PayPal
 const PAYPAL_BASE_URL = process.env.NODE_ENV === 'production' 
@@ -37,6 +37,7 @@ interface OrderData {
   petName: string
   animalType: string
   childName: string
+  childAge?: string
   address?: string
   city?: string
   postalCode?: string
@@ -248,37 +249,9 @@ ${upsellDetails ? '🎁 PRODUITS BONUS:' + upsellDetails : ''}
       
       console.log('✅ Commande enregistrée avec succès dans Supabase')
 
-      // Envoyer les emails de confirmation
-      try {
-        const emailData = {
-          orderNumber: newOrder.order_number,
-          email: orderData.email,
-          petName: orderData.petName,
-          animalType: orderData.animalType,
-          childName: orderData.childName,
-          numberOfSheets: orderData.numberOfSheets,
-          totalAmount: newOrder.total_amount,
-          notes: orderData.notes || ''
-        }
-        
-        console.log('📧 Envoi des emails de confirmation...')
-        const emailResults = await sendOrderConfirmationEmails(emailData)
-        
-        if (emailResults.client.success) {
-          console.log('✅ Email client envoyé avec succès')
-        } else {
-          console.error('❌ Erreur email client:', emailResults.client.error)
-        }
-        
-        if (emailResults.artist.success) {
-          console.log('✅ Email artiste envoyé avec succès')
-        } else {
-          console.error('❌ Erreur email artiste:', emailResults.artist.error)
-        }
-      } catch (emailError) {
-        console.error('❌ Erreur générale envoi emails:', emailError)
-        // Ne pas faire échouer la commande pour un problème d'email
-      }
+      // ✅ Les emails de confirmation seront envoyés après la validation du paiement PayPal
+      // Voir /api/paypal/capture/route.ts pour l'envoi des emails
+      console.log('📧 Emails de confirmation programmés après validation PayPal')
 
       // Trouver l'URL d'approbation PayPal
       const approvalUrl = paypalOrder.links?.find((link: any) => link.rel === 'approve')?.href

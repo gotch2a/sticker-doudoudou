@@ -3,8 +3,34 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { OrderService, Order, AdminNote, generateSecurePhotoUrl } from '@/lib/supabase'
-import { productSettingsService, ProductSettings, ProductPack } from '@/lib/productSettings'
 import { shippingSettingsService, ShippingSettings } from '@/lib/shippingSettings'
+
+// Types pour les produits (maintenant gérés via Supabase)
+interface ProductSettings {
+  id: string
+  name: string
+  description: string
+  originalPrice: number
+  salePrice: number
+  savings: number
+  icon: string
+  badge?: string
+  popular?: boolean
+  features: string[]
+  active: boolean
+  category: 'base' | 'upsell' | 'pack'
+}
+
+interface ProductPack {
+  id: string
+  name: string
+  description: string
+  products: string[]
+  originalPrice: number
+  salePrice: number
+  savings: number
+  active: boolean
+}
 
 export default function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([])
@@ -13,6 +39,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [newNote, setNewNote] = useState('')
   const [securePhotoUrls, setSecurePhotoUrls] = useState<Record<string, string>>({})
+  const [orderArticles, setOrderArticles] = useState<any[]>([])  // Articles de la commande
   
   // État pour la gestion des articles
   const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'packs' | 'shipping'>('orders')
@@ -72,6 +99,18 @@ export default function AdminPage() {
     }
   }
 
+  // Charger les articles d'une commande
+  const loadOrderArticles = async (orderId: string) => {
+    try {
+      const articles = await OrderService.getOrderArticles(orderId)
+      setOrderArticles(articles)
+      console.log('📦 Articles de la commande chargés:', articles)
+    } catch (error) {
+      console.error('Erreur chargement articles de la commande:', error)
+      setOrderArticles([])
+    }
+  }
+
   // Charger les articles depuis Supabase
   const loadProducts = async () => {
     try {
@@ -101,9 +140,10 @@ export default function AdminPage() {
   }
 
   const loadProductPacks = () => {
-    const savedPacks = productSettingsService.getPacks()
-    setProductPacks(savedPacks)
-    console.log('📦 Packs chargés:', savedPacks)
+    // TODO: Implémenter les packs dans Supabase
+    // Pour l'instant, on utilise un tableau vide
+    setProductPacks([])
+    console.log('📦 Packs désactivés temporairement (à implémenter dans Supabase)')
   }
 
   // Charger les paramètres de livraison depuis le serveur
@@ -168,18 +208,26 @@ export default function AdminPage() {
     try {
       console.log('💾 Sauvegarde du produit:', editingProduct.name)
       
-      // Sauvegarder via le service de produits
-      await productSettingsService.updateProduct(editingProduct.id, editingProduct)
+      // Sauvegarder directement dans Supabase (comme les autres fonctions)
+      const updates = {
+        name: editingProduct.name,
+        description: editingProduct.description,
+        original_price: editingProduct.originalPrice,
+        sale_price: editingProduct.salePrice,
+        active: editingProduct.active,
+        // Recalculer les économies
+        savings: editingProduct.originalPrice - editingProduct.salePrice
+      }
       
-      // Mettre à jour l'état local
-      setProducts(products.map(p => 
-        p.id === editingProduct.id ? editingProduct : p
-      ))
+      await OrderService.updateArticle(editingProduct.id, updates)
+      
+      // Recharger les produits depuis Supabase pour afficher les changements
+      await loadProducts()
       
       // Fermer le modal
       setEditingProduct(null)
       
-      console.log('✅ Produit sauvegardé avec succès')
+      console.log('✅ Produit sauvegardé avec succès dans Supabase')
       alert('✅ Produit mis à jour avec succès !')
       
     } catch (error) {
@@ -189,7 +237,7 @@ export default function AdminPage() {
   }
 
   // Fonctions pour les paramètres de livraison
-  const updateShippingTarif = (tarif: 'tarif1' | 'tarif2', field: string, value: string | number) => {
+  const updateShippingTarif = (tarif: 'tarif1' | 'tarif2', field: string, value: string | number | boolean) => {
     if (!shippingSettings) return
     
     const updatedSettings = {
@@ -308,14 +356,9 @@ Cree le ${new Date().toLocaleString('fr-FR')}`
   }
 
   const togglePackStatus = (packId: string) => {
-    const currentPack = productPacks.find(p => p.id === packId)
-    if (currentPack) {
-      const updatedPacks = productSettingsService.updatePack(packId, { 
-        active: !currentPack.active 
-      })
-      setProductPacks(updatedPacks)
-      alert(`Pack ${currentPack.active ? 'désactivé' : 'activé'} !`)
-    }
+    // TODO: Implémenter la gestion des packs dans Supabase
+    console.log('📦 Fonction packs désactivée temporairement')
+    alert('⚠️ Gestion des packs temporairement désactivée - à implémenter dans Supabase')
   }
 
   return (
@@ -373,148 +416,187 @@ Cree le ${new Date().toLocaleString('fr-FR')}`
 
         {/* Contenu des onglets */}
         {activeTab === 'orders' && (
-          <div>
+          <div className="space-y-6">
+            {/* Header avec statistiques */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">📦 Gestion des Commandes</h2>
+                <button
+                  onClick={loadOrders}
+                  className="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition-colors"
+                >
+                  🔄 Actualiser
+                </button>
+              </div>
+              
+              {/* Statistiques rapides */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+                  <div className="text-lg font-bold text-yellow-800">
+                    {orders.filter(o => o.status === 'nouveau').length}
+                  </div>
+                  <div className="text-sm text-yellow-600">Nouveau</div>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                  <div className="text-lg font-bold text-blue-800">
+                    {orders.filter(o => o.status === 'en_cours').length}
+                  </div>
+                  <div className="text-sm text-blue-600">En cours</div>
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                  <div className="text-lg font-bold text-green-800">
+                    {orders.filter(o => o.status === 'termine').length}
+                  </div>
+                  <div className="text-sm text-green-600">Terminé</div>
+                </div>
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
+                  <div className="text-lg font-bold text-purple-800">
+                    {orders.filter(o => o.status === 'expedie').length}
+                  </div>
+                  <div className="text-sm text-purple-600">Expédié</div>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                  <div className="text-lg font-bold text-gray-800">
+                    {orders.length}
+                  </div>
+                  <div className="text-sm text-gray-600">Total</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Liste des commandes */}
             {loading ? (
-              <p>Chargement des commandes...</p>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                <div className="animate-pulse">
+                  <div className="text-lg text-gray-500">⏳ Chargement des commandes...</div>
+                </div>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                <div className="text-lg text-gray-500 mb-2">📭 Aucune commande trouvée</div>
+                <p className="text-gray-400">Les nouvelles commandes apparaîtront ici</p>
+              </div>
             ) : (
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="px-6 py-3 text-left">Numéro</th>
-                      <th className="px-6 py-3 text-left">Doudou</th>
-                      <th className="px-6 py-3 text-left">Client</th>
-                      <th className="px-6 py-3 text-left">Adresse</th>
-                      <th className="px-6 py-3 text-left">Statut</th>
-                      <th className="px-6 py-3 text-left">Total</th>
-                      <th className="px-6 py-3 text-left">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders.map((order) => (
-                      <tr key={order.id} className="border-b hover:bg-gray-50">
-                        <td className="px-6 py-4">
-                          <div>
-                            <p className="font-medium">{order.order_number}</p>
-                            <p className="text-sm text-gray-500">
-                              {new Date(order.created_at).toLocaleDateString('fr-FR')}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div>
-                            <p className="font-medium">{order.pet_name}</p>
-                            <p className="text-sm text-gray-500">
-                              {order.animal_type} • {order.number_of_sheets} planche(s)
-                            </p>
-                            {order.photo_url && (
-                              <div className="mt-2">
-                                {securePhotoUrls[order.id] && securePhotoUrls[order.id] !== '#' ? (
-                                  <div className="flex items-center gap-2">
-                                    <Image 
-                                      src={securePhotoUrls[order.id]} 
-                                      alt={`Photo de ${order.pet_name}`}
-                                      width={32}
-                                      height={32}
-                                      className="w-8 h-8 object-cover rounded border border-gray-300"
-                                      onError={(e) => {
-                                        e.currentTarget.style.display = 'none'
-                                        e.currentTarget.nextElementSibling?.classList.remove('hidden')
-                                      }}
-                                    />
-                                    <span className="hidden text-xs text-red-600">❌ Erreur chargement</span>
-                                    <a 
-                                      href={securePhotoUrls[order.id]} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="text-xs text-blue-600 hover:text-blue-800"
-                                    >
-                                      📸 Agrandir
-                                    </a>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 bg-gray-200 rounded border border-gray-300 flex items-center justify-center">
-                                      <span className="text-xs">⏳</span>
-                                    </div>
-                                    <span className="text-xs text-gray-500">Chargement...</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div>
-                            <p className="font-medium">{order.child_name}</p>
-                            <p className="text-sm text-gray-500">{order.client_email}</p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm">
-                            <p>{order.address}</p>
-                            <p className="text-gray-500">{order.city} {order.postal_code}</p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-1 rounded text-sm ${
-                            order.status === 'nouveau' ? 'bg-yellow-100 text-yellow-800' :
-                            order.status === 'en_cours' ? 'bg-blue-100 text-blue-800' :
-                            order.status === 'termine' ? 'bg-green-100 text-green-800' :
-                            order.status === 'expedie' ? 'bg-purple-100 text-purple-800' :
-                            'bg-gray-100 text-gray-800'
+              <div className="space-y-4">
+                {orders.map((order) => (
+                  <div key={order.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                      
+                      {/* STATUT - Element principal très visible */}
+                      <div className="lg:col-span-2">
+                        <div className="text-center">
+                          <div className={`inline-flex items-center justify-center px-4 py-3 rounded-xl font-bold text-lg shadow-sm border-2 w-32 h-16 ${
+                            order.status === 'nouveau' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' :
+                            order.status === 'en_cours' ? 'bg-blue-100 text-blue-800 border-blue-300' :
+                            order.status === 'termine' ? 'bg-green-100 text-green-800 border-green-300' :
+                            order.status === 'expedie' ? 'bg-purple-100 text-purple-800 border-purple-300' :
+                            'bg-gray-100 text-gray-800 border-gray-300'
                           }`}>
-                            {order.status.replace('_', ' ')}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 font-medium">
-                          {order.total_amount}€
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-2">
-                            <button
-                              onClick={() => {
-                                setSelectedOrder(order)
-                                loadOrderNotes(order.id)
-                              }}
-                              className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
-                            >
-                              👁️ Détails
-                            </button>
-                            <button
-                              onClick={() => generateBrief(order)}
-                              className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
-                            >
-                              📋 Brief
-                            </button>
-                            <select
-                              value={order.status}
-                              onChange={(e) => updateOrderStatus(order.id, e.target.value as Order['status'])}
-                              className="border rounded px-2 py-1 text-xs"
-                            >
-                              <option value="nouveau">Nouveau</option>
-                              <option value="en_cours">En cours</option>
-                              <option value="termine">Terminé</option>
-                              <option value="expedie">Expédié</option>
-                              <option value="livre">Livré</option>
-                            </select>
+                            {order.status.replace('_', ' ').toUpperCase()}
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          
+                          {/* Sélecteur de statut */}
+                          <select
+                            value={order.status}
+                            onChange={(e) => updateOrderStatus(order.id, e.target.value as Order['status'])}
+                            className="mt-2 w-32 border-2 border-gray-300 rounded-lg px-3 py-1 text-sm font-medium bg-white hover:bg-gray-50 focus:border-pink-500 focus:outline-none"
+                          >
+                            <option value="nouveau">Nouveau</option>
+                            <option value="en_cours">En cours</option>
+                            <option value="termine">Terminé</option>
+                            <option value="expedie">Expédié</option>
+                            <option value="livre">Livré</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Informations commande */}
+                      <div className="lg:col-span-3">
+                        <div className="bg-gray-50 p-4 rounded-lg h-[160px] flex flex-col">
+                          <h3 className="font-bold text-gray-900 mb-2">📋 Commande</h3>
+                          <p className="font-semibold text-lg text-pink-600">{order.order_number}</p>
+                          <p className="text-sm text-gray-500">
+                            📅 {new Date(order.created_at).toLocaleDateString('fr-FR')}
+                          </p>
+                          <p className="text-lg font-bold text-gray-900 mt-auto">💰 {order.total_amount}€</p>
+                        </div>
+                      </div>
+
+                      {/* Détails du doudou */}
+                      <div className="lg:col-span-3">
+                        <div className="bg-blue-50 p-4 rounded-lg h-[160px] flex flex-col">
+                          <h3 className="font-bold text-gray-900 mb-2">🧸 Doudou</h3>
+                          <p className="font-semibold text-blue-800">{order.pet_name}</p>
+                          <p className="text-sm text-blue-600">{order.animal_type}</p>
+                          <p className="text-sm text-gray-600">{order.number_of_sheets} planche(s)</p>
+                          
+                          {order.photo_url && (
+                            <div className="mt-auto">
+                              {securePhotoUrls[order.id] && securePhotoUrls[order.id] !== '#' ? (
+                                <div className="flex items-center gap-2">
+                                  <Image 
+                                    src={securePhotoUrls[order.id]} 
+                                    alt={`Photo de ${order.pet_name}`}
+                                    width={40}
+                                    height={40}
+                                    className="w-10 h-10 object-cover rounded-lg border-2 border-blue-200"
+                                  />
+                                  <a 
+                                    href={securePhotoUrls[order.id]} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                  >
+                                    📸 Voir
+                                  </a>
+                                </div>
+                              ) : (
+                                <div className="w-10 h-10 bg-blue-200 rounded-lg flex items-center justify-center">
+                                  <span className="text-blue-600">⏳</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Informations client */}
+                      <div className="lg:col-span-2">
+                        <div className="bg-green-50 p-4 rounded-lg h-[160px] flex flex-col">
+                          <h3 className="font-bold text-gray-900 mb-2">👤 Client</h3>
+                          <p className="font-semibold text-green-800">{order.child_name}</p>
+                          <p className="text-sm text-green-600">{order.client_email}</p>
+                          <div className="text-xs text-gray-600 mt-auto">
+                            <p>{order.address}</p>
+                            <p>{order.city} {order.postal_code}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="lg:col-span-2 space-y-2">
+                        <button
+                          onClick={() => {
+                            setSelectedOrder(order)
+                            loadOrderNotes(order.id)
+                            loadOrderArticles(order.id)
+                          }}
+                          className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                        >
+                          👁️ Détails
+                        </button>
+                        <button
+                          onClick={() => generateBrief(order)}
+                          className="w-full bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+                        >
+                          📋 Brief
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
-            
-            <div className="mt-8">
-              <button
-                onClick={loadOrders}
-                className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700"
-              >
-                Actualiser les commandes
-              </button>
-            </div>
           </div>
         )}
 
@@ -632,13 +714,53 @@ Cree le ${new Date().toLocaleString('fr-FR')}`
                     </div>
                   </div>
 
-                  {/* Détails de la commande */}
+                  {/* Articles de la commande */}
                   <div className="bg-yellow-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-900 mb-3">📦 Commande</h3>
-                    <div className="space-y-2">
-                      <p><strong>Nombre de planches:</strong> {selectedOrder.number_of_sheets}</p>
-                      <p><strong>Prix par planche:</strong> {(selectedOrder.total_amount / selectedOrder.number_of_sheets).toFixed(2)}€</p>
-                      <p><strong>Total:</strong> <span className="text-lg font-bold">{selectedOrder.total_amount}€</span></p>
+                    <h3 className="font-semibold text-gray-900 mb-3">🛒 Articles commandés</h3>
+                    <div className="space-y-3">
+                      {orderArticles.length === 0 ? (
+                        <div className="text-center py-4">
+                          <p className="text-gray-500 text-sm">⏳ Chargement des articles...</p>
+                        </div>
+                      ) : (
+                        <>
+                          {orderArticles.map((item) => (
+                            <div key={item.id} className="bg-white p-3 rounded-lg border border-yellow-200">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-lg">{item.articles?.icon || '📦'}</span>
+                                    <h4 className="font-semibold text-gray-900">{item.articles?.name}</h4>
+                                    {item.articles?.badge && (
+                                      <span className="bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold">
+                                        {item.articles.badge}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-gray-600 mb-2">{item.articles?.description}</p>
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <span className="text-gray-600">Quantité: <strong>{item.quantity}</strong></span>
+                                    <span className="text-gray-600">•</span>
+                                    <span className="text-gray-600">Prix unitaire: <strong>{item.unit_price}€</strong></span>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-lg font-bold text-yellow-800">
+                                    {item.total_price}€
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          <div className="border-t border-yellow-300 pt-3 mt-4">
+                            <div className="flex justify-between items-center">
+                              <span className="font-semibold text-gray-900">Total commande:</span>
+                              <span className="text-xl font-bold text-yellow-800">{selectedOrder.total_amount}€</span>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -783,7 +905,152 @@ Cree le ${new Date().toLocaleString('fr-FR')}`
         {activeTab === 'shipping' && (
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4">🚚 Paramètres de Livraison</h2>
-            <p className="text-gray-600">Cette section sera bientôt disponible.</p>
+            
+            {!shippingSettings ? (
+              <p className="text-gray-600">Chargement des paramètres de livraison...</p>
+            ) : (
+              <div className="space-y-8">
+                {/* Tarif 1 - Standard */}
+                <div className="border rounded-lg p-6">
+                  <h3 className="text-lg font-semibold mb-4 text-blue-600">
+                    📦 Tarif 1 - {shippingSettings.tarif1.name}
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Nom du tarif</label>
+                      <input
+                        type="text"
+                        value={shippingSettings.tarif1.name}
+                        onChange={(e) => updateShippingTarif('tarif1', 'name', e.target.value)}
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="Ex: Standard"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Prix (€)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={shippingSettings.tarif1.price}
+                        onChange={(e) => updateShippingTarif('tarif1', 'price', parseFloat(e.target.value) || 0)}
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Délai (jours)</label>
+                      <input
+                        type="number"
+                        value={shippingSettings.tarif1.delay}
+                        onChange={(e) => updateShippingTarif('tarif1', 'delay', parseInt(e.target.value) || 0)}
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium mb-1">Description</label>
+                    <textarea
+                      value={shippingSettings.tarif1.description}
+                      onChange={(e) => updateShippingTarif('tarif1', 'description', e.target.value)}
+                      className="w-full border rounded px-3 py-2 h-20"
+                      placeholder="Description du mode de livraison..."
+                    />
+                  </div>
+                  
+                  <div className="mt-4">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={shippingSettings.tarif1.active}
+                        onChange={(e) => updateShippingTarif('tarif1', 'active', e.target.checked)}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Tarif actif</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Tarif 2 - Express */}
+                <div className="border rounded-lg p-6">
+                  <h3 className="text-lg font-semibold mb-4 text-green-600">
+                    🚀 Tarif 2 - {shippingSettings.tarif2.name}
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Nom du tarif</label>
+                      <input
+                        type="text"
+                        value={shippingSettings.tarif2.name}
+                        onChange={(e) => updateShippingTarif('tarif2', 'name', e.target.value)}
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="Ex: Express"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Prix (€)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={shippingSettings.tarif2.price}
+                        onChange={(e) => updateShippingTarif('tarif2', 'price', parseFloat(e.target.value) || 0)}
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Délai (jours)</label>
+                      <input
+                        type="number"
+                        value={shippingSettings.tarif2.delay}
+                        onChange={(e) => updateShippingTarif('tarif2', 'delay', parseInt(e.target.value) || 0)}
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium mb-1">Description</label>
+                    <textarea
+                      value={shippingSettings.tarif2.description}
+                      onChange={(e) => updateShippingTarif('tarif2', 'description', e.target.value)}
+                      className="w-full border rounded px-3 py-2 h-20"
+                      placeholder="Description du mode de livraison..."
+                    />
+                  </div>
+                  
+                  <div className="mt-4">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={shippingSettings.tarif2.active}
+                        onChange={(e) => updateShippingTarif('tarif2', 'active', e.target.checked)}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Tarif actif</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Informations générales */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-700 mb-2">📋 Informations</h4>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p>• Les modifications sont sauvegardées automatiquement</p>
+                    <p>• Les tarifs inactifs n'apparaissent pas sur le site</p>
+                    <p>• Le délai est affiché en jours ouvrables</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

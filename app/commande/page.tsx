@@ -14,6 +14,7 @@ import {
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { usePayPal } from '@/hooks/usePayPal'
+import { shippingSettingsService } from '@/lib/shippingSettings'
 
 interface FormData {
   photo: File | null
@@ -51,6 +52,25 @@ export default function CommandePage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [shippingCost, setShippingCost] = useState(3.5) // Valeur par défaut
+  const [shippingReason, setShippingReason] = useState('Pour stickers uniquement (planche de base seule ou avec planche bonus)')
+
+  // Charger les paramètres de livraison depuis le serveur
+  useEffect(() => {
+    const loadShippingSettings = async () => {
+      try {
+        await shippingSettingsService.loadFromServer()
+        const shippingInfo = shippingSettingsService.calculateShipping([]) // Pas d'upsells sur cette page
+        setShippingCost(shippingInfo.cost)
+        setShippingReason(shippingInfo.reason)
+        console.log('🚚 Paramètres de livraison chargés:', shippingInfo)
+      } catch (error) {
+        console.error('❌ Erreur chargement paramètres livraison:', error)
+      }
+    }
+    
+    loadShippingSettings()
+  }, [])
 
 
 
@@ -159,8 +179,8 @@ export default function CommandePage() {
   }
 
   const [pricePerSheet, setPricePerSheet] = useState(12.90)
-  const basePrice = formData.numberOfSheets * pricePerSheet
-  const shippingCost = 3.5 // Prix de base pour les stickers seuls
+  const basePrice = 1 * pricePerSheet // Toujours 1 planche à cette étape
+  
   const totalPrice = basePrice + shippingCost
 
   // Charger le prix dynamique au montage
@@ -328,6 +348,7 @@ export default function CommandePage() {
               </label>
               <input
                 type="text"
+                name="childName"
                 value={formData.childName}
                 onChange={(e) => setFormData({ ...formData, childName: e.target.value })}
                 placeholder="Le prénom de votre petit bout"
@@ -371,6 +392,8 @@ export default function CommandePage() {
               </label>
               <input
                 type="text"
+                name="address"
+                autoComplete="street-address"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 placeholder="Numéro et nom de rue"
@@ -390,6 +413,8 @@ export default function CommandePage() {
                 </label>
                 <input
                   type="text"
+                  name="city"
+                  autoComplete="address-level2"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   placeholder="Votre ville"
@@ -408,6 +433,8 @@ export default function CommandePage() {
                 </label>
                 <input
                   type="text"
+                  name="postalCode"
+                  autoComplete="postal-code"
                   value={formData.postalCode}
                   onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
                   placeholder="75001"
@@ -427,6 +454,8 @@ export default function CommandePage() {
               </label>
               <input
                 type="email"
+                name="email"
+                autoComplete="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="votre@email.fr"
@@ -451,19 +480,7 @@ export default function CommandePage() {
               ⚙️ Options
             </h2>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nombre de planches
-              </label>
-              <div className="flex items-center gap-4">
-                <span className="text-xl font-semibold text-primary-600 bg-primary-50 px-4 py-2 rounded-lg">
-                  1 planche incluse
-                </span>
-                <span className="text-sm text-gray-500">
-                  🎁 Des planches supplémentaires seront proposées à l'étape suivante
-                </span>
-              </div>
-            </div>
+
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -472,9 +489,9 @@ export default function CommandePage() {
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Des détails spéciaux ? Couleurs préférées ? Accessoires du doudou ?"
+                placeholder="Aidez l'artiste ! Couleurs préférées de votre enfant ? Détails importants sur le doudou ? Contexte particulier ?"
                 rows={3}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-colors resize-none"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors resize-none"
               />
             </div>
           </motion.div>
@@ -488,11 +505,14 @@ export default function CommandePage() {
           >
             <div className="space-y-2 mb-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-700">Stickers ({formData.numberOfSheets} planche{formData.numberOfSheets > 1 ? 's' : ''})</span>
+                <span className="text-gray-700">Planche de stickers personnalisés</span>
                 <span className="font-medium">{basePrice.toFixed(2)}€</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-700">🚚 Frais de livraison</span>
+                <span className="text-gray-700 flex items-center gap-2">
+                  🚚 Frais de livraison
+                  <span className="text-xs text-gray-500">({shippingReason})</span>
+                </span>
                 <span className="font-medium">{shippingCost.toFixed(2)}€</span>
               </div>
             </div>

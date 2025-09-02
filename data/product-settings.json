@@ -63,7 +63,7 @@
     "savings": 10,
     "icon": "📖",
     "badge": "Populaire",
-    "active": false,
+    "active": true,
     "category": "upsell",
     "features": [
       "8-10 pages d'histoire",

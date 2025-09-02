@@ -4,6 +4,42 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* Couleurs personnalisées pour remplacer les anciennes */
+:root {
+  --primary-50: #f7f6f4;
+  --primary-100: #ede9e4;
+  --primary-200: #dbd2c9;
+  --primary-300: #c4b5a0;
+  --primary-400: #b5a082;
+  --primary-500: #a0956b;
+  --primary-600: #8b7355;
+  --primary-700: #735f47;
+  --primary-800: #5d4e37;
+  --primary-900: #4a3f2a;
+  
+  --sage-50: #f6f7f4;
+  --sage-100: #eef1ea;
+  --sage-200: #dde3d5;
+  --sage-300: #c5cfb8;
+  --sage-400: #a8b896;
+  --sage-500: #9caf88;
+  --sage-600: #7d9069;
+  --sage-700: #627254;
+  --sage-800: #4f5c44;
+  --sage-900: #424d39;
+  
+  --warm-50: #faf9f7;
+  --warm-100: #f4f1ec;
+  --warm-200: #e8e0d6;
+  --warm-300: #d6c7b7;
+  --warm-400: #c2a991;
+  --warm-500: #b08968;
+  --warm-600: #9e7356;
+  --warm-700: #845f49;
+  --warm-800: #6b4e3d;
+  --warm-900: #574133;
+}
+
 /* Base styles simples */
 body {
   font-family: 'Inter', sans-serif;
@@ -51,6 +87,76 @@ body {
 
 .btn-secondary:hover {
   background-color: #e5e7eb;
+}
+
+/* Classes utilitaires pour les nouvelles couleurs */
+.bg-primary-50 { background-color: var(--primary-50) !important; }
+.bg-primary-100 { background-color: var(--primary-100) !important; }
+.bg-primary-200 { background-color: var(--primary-200) !important; }
+.bg-primary-300 { background-color: var(--primary-300) !important; }
+.bg-primary-400 { background-color: var(--primary-400) !important; }
+.bg-primary-500 { background-color: var(--primary-500) !important; }
+.bg-primary-600 { background-color: var(--primary-600) !important; }
+.bg-primary-700 { background-color: var(--primary-700) !important; }
+
+.bg-sage-50 { background-color: var(--sage-50) !important; }
+.bg-sage-100 { background-color: var(--sage-100) !important; }
+.bg-sage-200 { background-color: var(--sage-200) !important; }
+.bg-sage-600 { background-color: var(--sage-600) !important; }
+
+.bg-warm-50 { background-color: var(--warm-50) !important; }
+.bg-warm-100 { background-color: var(--warm-100) !important; }
+.bg-warm-600 { background-color: var(--warm-600) !important; }
+
+.text-primary-600 { color: var(--primary-600) !important; }
+.text-primary-700 { color: var(--primary-700) !important; }
+.text-primary-800 { color: var(--primary-800) !important; }
+.text-primary-100 { color: var(--primary-100) !important; }
+
+.text-sage-600 { color: var(--sage-600) !important; }
+.text-sage-700 { color: var(--sage-700) !important; }
+.text-sage-800 { color: var(--sage-800) !important; }
+
+.text-warm-600 { color: var(--warm-600) !important; }
+
+.border-primary-200 { border-color: var(--primary-200) !important; }
+.border-primary-300 { border-color: var(--primary-300) !important; }
+.border-primary-400 { border-color: var(--primary-400) !important; }
+.border-primary-500 { border-color: var(--primary-500) !important; }
+.border-primary-600 { border-color: var(--primary-600) !important; }
+
+.border-sage-200 { border-color: var(--sage-200) !important; }
+
+.focus\:border-primary-500:focus { border-color: var(--primary-500) !important; }
+.focus\:ring-primary-200:focus { --tw-ring-color: var(--primary-200) !important; }
+.focus\:ring-primary-500:focus { --tw-ring-color: var(--primary-500) !important; }
+
+.hover\:bg-primary-50:hover { background-color: var(--primary-50) !important; }
+.hover\:bg-primary-700:hover { background-color: var(--primary-700) !important; }
+.hover\:border-primary-300:hover { border-color: var(--primary-300) !important; }
+.hover\:border-primary-400:hover { border-color: var(--primary-400) !important; }
+
+/* Gradients */
+.bg-gradient-to-br.from-primary-50 {
+  background-image: linear-gradient(to bottom right, var(--primary-50), var(--tw-gradient-to)) !important;
+}
+.via-warm-50 {
+  --tw-gradient-stops: var(--tw-gradient-from), var(--warm-50), var(--tw-gradient-to) !important;
+}
+.to-sage-50 {
+  --tw-gradient-to: var(--sage-50) !important;
+}
+.from-primary-600 {
+  --tw-gradient-from: var(--primary-600) !important;
+}
+.to-sage-600 {
+  --tw-gradient-to: var(--sage-600) !important;
+}
+.from-sage-50 {
+  --tw-gradient-from: var(--sage-50) !important;
+}
+.to-primary-50 {
+  --tw-gradient-to: var(--primary-50) !important;
 }
 
 /* Animations simples */

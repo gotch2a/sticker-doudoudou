@@ -9,6 +9,46 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Redéfinition de 'stone' pour notre palette primary
+        stone: {
+          50: '#f7f6f4',
+          100: '#ede9e4',
+          200: '#dbd2c9',
+          300: '#c4b5a0',
+          400: '#b5a082',
+          500: '#a0956b',
+          600: '#8b7355',
+          700: '#735f47',
+          800: '#5d4e37',
+          900: '#4a3f2a',
+        },
+        // Redéfinition de 'emerald' pour notre palette sage
+        emerald: {
+          50: '#f6f7f4',
+          100: '#eef1ea',
+          200: '#dde3d5',
+          300: '#c5cfb8',
+          400: '#a8b896',
+          500: '#9caf88',
+          600: '#7d9069',
+          700: '#627254',
+          800: '#4f5c44',
+          900: '#424d39',
+        },
+        // Redéfinition de 'amber' pour notre palette warm  
+        amber: {
+          50: '#faf9f7',
+          100: '#f4f1ec',
+          200: '#e8e0d6',
+          300: '#d6c7b7',
+          400: '#c2a991',
+          500: '#b08968',
+          600: '#9e7356',
+          700: '#845f49',
+          800: '#6b4e3d',
+          900: '#574133',
+        },
+        // Garder notre palette personnalisée aussi
         primary: {
           50: '#f7f6f4',
           100: '#ede9e4',
@@ -44,18 +84,6 @@ module.exports = {
           700: '#845f49',
           800: '#6b4e3d',
           900: '#574133',
-        },
-        gray: {
-          50: '#f9fafb',
-          100: '#f3f4f6',
-          200: '#e5e7eb',
-          300: '#d1d5db',
-          400: '#9ca3af',
-          500: '#6b7280',
-          600: '#4b5563',
-          700: '#374151',
-          800: '#1f2937',
-          900: '#111827',
         }
       },
       fontFamily: {

@@ -23,6 +23,7 @@ export default function ConfirmationPage() {
   const [paymentStatus, setPaymentStatus] = useState<'processing' | 'success' | 'error'>('processing')
   const [orderDetails, setOrderDetails] = useState<any>(null)
   const [orderDetailsLoaded, setOrderDetailsLoaded] = useState(false)
+  const [basePricePerSheet, setBasePricePerSheet] = useState(12.90)
   const captureInProgressRef = useRef(false)
 
   const capturePayPalPayment = async () => {
@@ -35,8 +36,8 @@ export default function ConfirmationPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          token: paypalToken,
-          orderId: orderId
+          paypalOrderId: paypalToken,  // ✅ Nom correct du paramètre
+          orderNumber: orderId         // ✅ Nom correct du paramètre
         }),
       })
 
@@ -73,11 +74,13 @@ export default function ConfirmationPage() {
   }
 
   useEffect(() => {
-    // Mode démo : succès immédiat
+    // Mode démo : succès immédiat + envoi des emails
     if (isDemo) {
       console.log('🎭 Mode démo activé - paiement simulé')
       setPaymentStatus('success')
       fetchOrderDetails()
+      // Envoyer les emails en mode démo
+      sendDemoEmails()
     }
     // Capturer le paiement PayPal si on vient de PayPal
     else if (paypalToken && orderId && !captureInProgressRef.current) {
@@ -88,11 +91,51 @@ export default function ConfirmationPage() {
     }
   }, [isDemo, paypalToken, orderId])
 
+  const sendDemoEmails = async () => {
+    try {
+      console.log('📧 Envoi des emails en mode démo...')
+      const response = await fetch('/api/paypal/capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          paypalOrderId: 'demo_payment',
+          orderNumber: orderId
+        }),
+      })
+      const result = await response.json()
+      if (result.success) {
+        console.log('✅ Emails démo envoyés avec succès')
+      }
+    } catch (error) {
+      console.error('❌ Erreur envoi emails démo:', error)
+    }
+  }
+
   useEffect(() => {
     // Arrêter les confettis après 3 secondes
     const timer = setTimeout(() => setConfetti(false), 3000)
     return () => clearTimeout(timer)
   }, []) // Une seule fois au mount
+
+  // Charger le prix de base dynamiquement depuis Supabase
+  useEffect(() => {
+    const loadBasePrice = async () => {
+      try {
+        const response = await fetch('/api/admin/products')
+        if (response.ok) {
+          const { products } = await response.json()
+          const baseProduct = products.find((p: any) => p.id === 'planche-base')
+          if (baseProduct) {
+            setBasePricePerSheet(baseProduct.salePrice)
+            console.log('💰 Prix planche de base chargé pour confirmation:', baseProduct.salePrice)
+          }
+        }
+      } catch (error) {
+        console.error('❌ Erreur chargement prix de base:', error)
+      }
+    }
+    loadBasePrice()
+  }, [])
 
 
 
@@ -299,12 +342,14 @@ export default function ConfirmationPage() {
                   Stickers de {orderDetails.petName} ({orderDetails.numberOfSheets} planche(s))
                 </span>
                 <span className="font-medium">
-                  {(orderDetails.numberOfSheets * 12.90).toFixed(2)}€
+                  {(orderDetails.numberOfSheets * basePricePerSheet).toFixed(2)}€
                 </span>
               </div>
 
               {/* Upsells */}
               {orderDetails.upsells && orderDetails.upsells.map((upsellId: string) => {
+                // Ces prix seront récupérés dynamiquement depuis Supabase
+                // Pour l'instant, on garde les valeurs par défaut mais elles devraient être synchronisées
                 const upsellPrices: Record<string, {name: string, price: number}> = {
                   'photo-premium': { name: 'Photo Doudou Premium (en pause)', price: 29.90 },
                   'livre-histoire': { name: 'Livre d\'Histoire Personnalisé (en pause)', price: 24.90 },

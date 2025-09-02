@@ -6,12 +6,16 @@ export interface ShippingSettings {
     description: string
     price: number
     condition: string
+    delay: number
+    active: boolean
   }
   tarif2: {
     name: string
     description: string
     price: number
     condition: string
+    delay: number
+    active: boolean
   }
 }
 
@@ -21,13 +25,17 @@ const defaultShippingSettings: ShippingSettings = {
     name: 'Livraison Standard',
     description: 'Pour stickers uniquement (planche de base seule ou avec planche bonus)',
     price: 3.5,
-    condition: 'stickers_only'
+    condition: 'stickers_only',
+    delay: 5,
+    active: true
   },
   tarif2: {
     name: 'Livraison Premium', 
     description: 'Avec photo ou livre (objets physiques supplémentaires)',
     price: 5.8,
-    condition: 'with_physical_products'
+    condition: 'with_physical_products',
+    delay: 3,
+    active: true
   }
 }
 

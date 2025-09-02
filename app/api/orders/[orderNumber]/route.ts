@@ -57,6 +57,7 @@ export async function GET(
       paymentStatus: order.payment_status,
       photoUrl: order.photo_url,
       createdAt: order.created_at,
+      notes: order.notes || null,
       upsells: upsells
     }
 

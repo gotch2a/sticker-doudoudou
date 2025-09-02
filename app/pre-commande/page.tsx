@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { productSettingsService } from '@/lib/productSettings'
 import { shippingSettingsService } from '@/lib/shippingSettings'
 import { 
   Heart,
@@ -26,7 +25,6 @@ interface UpsellProduct {
   description: string
   originalPrice: number
   salePrice: number
-  savings: number
   icon: React.ElementType
   features: string[]
   badge?: string
@@ -34,6 +32,16 @@ interface UpsellProduct {
 }
 
 // Les produits upsell sont maintenant chargés dynamiquement
+
+// Fonction pour mapper les icônes selon l'ID du produit
+const getIconForProduct = (productId: string): React.ElementType => {
+  const iconMap: Record<string, React.ElementType> = {
+    'planche-bonus': Sticker,
+    'photo-premium': Image,
+    'livre-histoire': BookOpen,
+  }
+  return iconMap[productId] || Gift
+}
 
 // Articles mis en pause (Photo et Livre) - peuvent être réactivés depuis l'admin
 const pausedProducts: UpsellProduct[] = [
@@ -43,7 +51,6 @@ const pausedProducts: UpsellProduct[] = [
     description: 'Une magnifique photo format 13x18 avec cadre inclus',
     originalPrice: 39.90,
     salePrice: 29.90,
-    savings: 10.00,
     icon: Image,
     badge: 'Cadre Inclus',
     features: [
@@ -60,7 +67,6 @@ const pausedProducts: UpsellProduct[] = [
     description: 'L\'histoire magique de votre doudou en 8-10 pages illustrées',
     originalPrice: 34.90,
     salePrice: 24.90,
-    savings: 10.00,
     icon: BookOpen,
     badge: 'Populaire',
     features: [
@@ -93,43 +99,75 @@ export default function PreCommandePage() {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
   const [upsellProducts, setUpsellProducts] = useState<UpsellProduct[]>([])
+  const [shippingCost, setShippingCost] = useState(3.5) // Valeur par défaut
+  const [shippingReason, setShippingReason] = useState('Pour stickers uniquement (planche de base seule ou avec planche bonus)')
 
   // Charger les produits upsell actifs au montage du composant
   useEffect(() => {
-    const activeProducts = productSettingsService.getActiveUpsellProducts()
-    const convertedProducts: UpsellProduct[] = activeProducts.map(product => ({
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      originalPrice: product.originalPrice,
-      salePrice: product.salePrice,
-      savings: product.savings,
-      icon: getIconComponent(product.icon),
-      badge: product.badge,
-      popular: product.popular,
-      features: product.features
-    }))
-    setUpsellProducts(convertedProducts)
-    
-    // Charger le prix de base dynamiquement
-    const baseProduct = productSettingsService.getProduct('planche-base')
-    if (baseProduct) {
-      setBasePricePerSheet(baseProduct.salePrice)
-      console.log('💰 Prix planche de base chargé:', baseProduct.salePrice)
+    const loadProducts = async () => {
+      try {
+        console.log('🔄 Chargement des produits depuis Supabase...')
+        
+        // Charger directement depuis l'API (Supabase) comme dans /commande
+        const response = await fetch('/api/admin/products')
+        if (response.ok) {
+          const { products } = await response.json()
+          console.log('📦 Produits récupérés depuis Supabase:', products.length)
+          
+          // Filtrer les produits upsell actifs
+          const activeUpsellProducts = products.filter((p: any) => p.active && p.category === 'upsell')
+          console.log('📦 Produits upsell actifs trouvés:', activeUpsellProducts.map((p: any) => p.name))
+          
+          const convertedProducts: UpsellProduct[] = activeUpsellProducts.map((product: any) => ({
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            originalPrice: product.originalPrice,
+            salePrice: product.salePrice,
+            icon: getIconForProduct(product.id),
+            features: product.features || [],
+            badge: product.badge,
+            popular: product.popular
+          }))
+          setUpsellProducts(convertedProducts)
+          
+          // Charger le prix de base dynamiquement depuis Supabase
+          const baseProduct = products.find((p: any) => p.id === 'planche-base')
+          if (baseProduct) {
+            setBasePricePerSheet(baseProduct.salePrice)
+            console.log('💰 Prix planche de base chargé depuis Supabase:', baseProduct.salePrice)
+          }
+          
+          console.log('🏷️ Produits upsell actifs chargés:', convertedProducts.length, 'produits')
+          convertedProducts.forEach(p => console.log('  ✅', p.name))
+        } else {
+          console.error('❌ Erreur récupération produits depuis Supabase')
+        }
+
+        // Charger les paramètres de livraison depuis le serveur
+        await shippingSettingsService.loadFromServer()
+        const initialShippingInfo = shippingSettingsService.calculateShipping([]) // Aucun produit sélectionné au début
+        setShippingCost(initialShippingInfo.cost)
+        setShippingReason(initialShippingInfo.reason)
+        console.log('🚚 Paramètres de livraison chargés:', initialShippingInfo)
+        
+      } catch (error) {
+        console.error('❌ Erreur chargement produits:', error)
+      }
     }
     
-    console.log('🏷️ Produits upsell actifs chargés:', convertedProducts)
+    loadProducts()
   }, [])
 
-  // Fonction pour convertir les icônes texte en composants
-  const getIconComponent = (iconText: string) => {
-    switch (iconText) {
-      case '🏷️': return Sticker
-      case '🖼️': return Image
-      case '📖': return BookOpen
-      default: return Sticker
-    }
-  }
+  // Recalculer les frais de livraison quand les produits sélectionnés changent
+  useEffect(() => {
+    const updatedShippingInfo = shippingSettingsService.calculateShipping(selectedProducts)
+    setShippingCost(updatedShippingInfo.cost)
+    setShippingReason(updatedShippingInfo.reason)
+    console.log('🚚 Frais de livraison mis à jour:', updatedShippingInfo)
+  }, [selectedProducts])
+
+
 
   // Fonction pour calculer le pourcentage de remise dynamiquement
   const calculateDiscountPercentage = (originalPrice: number, salePrice: number): string => {
@@ -137,6 +175,34 @@ export default function PreCommandePage() {
     const discount = ((originalPrice - salePrice) / originalPrice) * 100
     return `-${Math.round(discount)}%`
   }
+
+  // Fonction pour calculer les économies dynamiquement
+  const calculateSavings = (originalPrice: number, salePrice: number): number => {
+    return Math.max(0, originalPrice - salePrice)
+  }
+
+  // Calcul des remises totales pour tous les produits sélectionnés
+  const calculateTotalSavings = (): number => {
+    return selectedProducts.reduce((total, productId) => {
+      const product = upsellProducts.find(p => p.id === productId)
+      if (product) {
+        return total + calculateSavings(product.originalPrice, product.salePrice)
+      }
+      return total
+    }, 0)
+  }
+
+  // Calcul du prix original total (avant remises)
+  const calculateOriginalTotal = (): number => {
+    const baseOriginalPrice = basePrice // Le prix de base n'a pas de remise
+    const upsellOriginalTotal = selectedProducts.reduce((total, productId) => {
+      const product = upsellProducts.find(p => p.id === productId)
+      return total + (product?.originalPrice || 0)
+    }, 0)
+    return baseOriginalPrice + upsellOriginalTotal + shippingCost
+  }
+
+
 
   // Prix de base
   const [basePricePerSheet, setBasePricePerSheet] = useState(12.90)
@@ -148,9 +214,7 @@ export default function PreCommandePage() {
     return total + (product?.salePrice || 0)
   }, 0)
   
-  // Calcul des frais de livraison dynamiques
-  const shippingInfo = shippingSettingsService.calculateShipping(selectedProducts)
-  const shippingCost = shippingInfo.cost
+  // Les frais de livraison sont maintenant gérés par les variables d'état
   
   const totalPrice = basePrice + upsellTotal + shippingCost
 
@@ -302,26 +366,27 @@ export default function PreCommandePage() {
                   } ${product.popular ? 'ring-2 ring-yellow-400' : ''}`}
                   onClick={() => handleProductToggle(product.id)}
                 >
-                  {/* Badge populaire */}
-                  {product.popular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <div className="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                        <Star className="w-3 h-3" />
-                        {product.badge}
+                  {/* Badge populaire - sans afficher le pourcentage de remise */}
+                  {(() => {
+                    const discountPercentage = calculateDiscountPercentage(product.originalPrice, product.salePrice)
+                    const hasDiscount = !!discountPercentage
+                    
+                    return product.popular && !hasDiscount ? (
+                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                        <div className="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                          <Star className="w-3 h-3" />
+                          Populaire
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    ) : null
+                  })()}
 
-                  {/* Badge promo */}
+                  {/* Badge promo - uniquement calculé dynamiquement */}
                   {(() => {
                     const discountPercentage = calculateDiscountPercentage(product.originalPrice, product.salePrice)
                     return discountPercentage ? (
                       <div className="absolute top-4 right-4 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-bold">
                         {discountPercentage}
-                      </div>
-                    ) : product.badge && !product.popular ? (
-                      <div className="absolute top-4 right-4 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-bold">
-                        {product.badge}
                       </div>
                     ) : null
                   })()}
@@ -361,11 +426,14 @@ export default function PreCommandePage() {
                           </span>
                         )}
                       </div>
-                      {product.savings > 0 && (
-                        <p className="text-sm text-green-600 font-medium">
-                          Économisez {product.savings.toFixed(2)}€ !
-                        </p>
-                      )}
+                      {(() => {
+                        const savings = calculateSavings(product.originalPrice, product.salePrice)
+                        return savings > 0 && (
+                          <p className="text-sm text-green-600 font-medium">
+                            Économisez {savings.toFixed(2)}€ !
+                          </p>
+                        )
+                      })()}
                     </div>
 
                     {/* Caractéristiques */}
@@ -454,10 +522,31 @@ export default function PreCommandePage() {
           <div className="flex items-center justify-between py-3 border-b border-gray-200">
             <span className="text-gray-700 flex items-center gap-2">
               🚚 Frais de livraison 
-              <span className="text-xs text-gray-500">({shippingInfo.reason})</span>
+              <span className="text-xs text-gray-500">({shippingReason})</span>
             </span>
             <span className="font-medium">{shippingCost.toFixed(2)}€</span>
           </div>
+
+          {/* Récapitulatif des remises si applicable */}
+          {(() => {
+            const totalSavings = calculateTotalSavings()
+            const originalTotal = calculateOriginalTotal()
+            
+            return totalSavings > 0 ? (
+              <div className="py-3 border-b border-gray-200 bg-green-50 -mx-4 px-4 rounded-lg">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Sous-total (prix normal)</span>
+                  <span className="text-gray-600 line-through">{originalTotal.toFixed(2)}€</span>
+                </div>
+                <div className="flex items-center justify-between text-sm font-medium">
+                  <span className="text-green-700 flex items-center gap-1">
+                    💰 Remise totale
+                  </span>
+                  <span className="text-green-700">-{totalSavings.toFixed(2)}€</span>
+                </div>
+              </div>
+            ) : null
+          })()}
 
           {/* Total */}
           <div className="flex items-center justify-between py-4 text-xl font-bold border-t-2 border-gray-300 mt-4">
@@ -465,22 +554,15 @@ export default function PreCommandePage() {
             <span className="text-green-600 text-2xl">{totalPrice.toFixed(2)}€</span>
           </div>
 
-          {selectedProducts.length > 0 && (
-            <div className="text-center text-sm text-green-600 font-medium">
-              ✨ Vous économisez {selectedProducts.reduce((total, id) => {
-                const product = upsellProducts.find(p => p.id === id)
-                return total + (product?.savings || 0)
-              }, 0).toFixed(2)}€ avec ces offres exclusives !
-            </div>
-          )}
+
         </div>
 
         {/* Boutons d'action */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex flex-col gap-4 justify-center items-center text-center w-full">
           <button
             onClick={handleFinalizeOrder}
             disabled={isProcessing}
-            className={`px-8 py-4 rounded-xl font-bold text-lg transition-all ${
+            className={`px-8 py-4 rounded-xl font-bold text-lg transition-all mx-auto ${
               !isProcessing
                 ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:shadow-lg transform hover:scale-105'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -499,6 +581,28 @@ export default function PreCommandePage() {
               </div>
             )}
           </button>
+
+          {/* Logo PayPal et sécurité */}
+          <div className="flex flex-col items-center gap-2 text-center">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>Paiement 100% sécurisé</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500">Propulsé par</span>
+              <svg width="120" height="30" viewBox="0 0 200 50" className="opacity-90">
+                <defs>
+                  <linearGradient id="paypal-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style={{stopColor:'#009cde', stopOpacity:1}} />
+                    <stop offset="100%" style={{stopColor:'#003087', stopOpacity:1}} />
+                  </linearGradient>
+                </defs>
+                <text x="10" y="35" fontFamily="Arial, sans-serif" fontSize="28" fontWeight="bold" fill="url(#paypal-blue)">PayPal</text>
+              </svg>
+            </div>
+          </div>
 
           <button
             onClick={handleGoBack}
