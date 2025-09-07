@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { shippingSettingsService } from '@/lib/shippingSettings'
 import { 
@@ -111,8 +111,15 @@ export default function PreCommandePage() {
   const [discountError, setDiscountError] = useState('')
   const [isValidatingDiscount, setIsValidatingDiscount] = useState(false)
   const [showDiscountField, setShowDiscountField] = useState(false)
+  
+  // Ref pour maintenir le focus sur le champ de saisie du code de remise
+  const discountInputRef = useRef<HTMLInputElement>(null)
 
   // Charger les produits upsell actifs au montage du composant
+  // DOCUMENTATION : Cette fonction charge les produits upsell depuis deux sources :
+  // 1. D'abord depuis Supabase via l'API /api/admin/products (structure snake_case)
+  // 2. En fallback depuis le fichier JSON local /data/product-settings.json (structure camelCase)
+  // Cette approche garantit l'affichage des upsells même si Supabase ne contient pas les bons produits
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -120,38 +127,99 @@ export default function PreCommandePage() {
         
         // Charger directement depuis l'API (Supabase) comme dans /commande
         const response = await fetch('/api/admin/products')
+        let upsellProductsLoaded = false
+        
         if (response.ok) {
-          const { products } = await response.json()
-          console.log('📦 Produits récupérés depuis Supabase:', products.length)
+          const data = await response.json()
           
-          // Filtrer les produits upsell actifs
-          const activeUpsellProducts = products.filter((p: any) => p.active && p.category === 'upsell')
-          console.log('📦 Produits upsell actifs trouvés:', activeUpsellProducts.map((p: any) => p.name))
+          // L'API retourne { articles: [...] } et non { products: [...] }
+          const products = data.articles || data.products || []
+          console.log('📦 Articles récupérés depuis Supabase:', products.length)
           
-          const convertedProducts: UpsellProduct[] = activeUpsellProducts.map((product: any) => ({
-            id: product.id,
-            name: product.name,
-            description: product.description,
-            originalPrice: product.originalPrice,
-            salePrice: product.salePrice,
-            icon: getIconForProduct(product.id),
-            features: product.features || [],
-            badge: product.badge,
-            popular: product.popular
-          }))
-          setUpsellProducts(convertedProducts)
+          // Convertir la structure snake_case vers camelCase et filtrer les upsells
+          const activeUpsellProducts = products
+            .filter((p: any) => p.active && p.category === 'upsell')
+            .map((product: any) => ({
+              id: product.id,
+              name: product.name,
+              description: product.description,
+              originalPrice: product.original_price || product.originalPrice,
+              salePrice: product.sale_price || product.salePrice,
+              features: product.features || [],
+              badge: product.badge,
+              popular: product.popular
+            }))
           
-          // Charger le prix de base dynamiquement depuis Supabase
-          const baseProduct = products.find((p: any) => p.id === 'planche-base')
-          if (baseProduct) {
-            setBasePricePerSheet(baseProduct.salePrice)
-            console.log('💰 Prix planche de base chargé depuis Supabase:', baseProduct.salePrice)
+          console.log('📦 Produits upsell actifs trouvés dans Supabase:', activeUpsellProducts.map((p: any) => p.name))
+          
+          if (activeUpsellProducts.length > 0) {
+            const convertedProducts: UpsellProduct[] = activeUpsellProducts.map((product: any) => ({
+              id: product.id,
+              name: product.name,
+              description: product.description,
+              originalPrice: product.originalPrice,
+              salePrice: product.salePrice,
+              icon: getIconForProduct(product.id),
+              features: product.features || [],
+              badge: product.badge,
+              popular: product.popular
+            }))
+            setUpsellProducts(convertedProducts)
+            upsellProductsLoaded = true
+            console.log('🏷️ Produits upsell actifs chargés depuis Supabase:', convertedProducts.length, 'produits')
           }
           
-          console.log('🏷️ Produits upsell actifs chargés:', convertedProducts.length, 'produits')
-          convertedProducts.forEach(p => console.log('  ✅', p.name))
-        } else {
-          console.error('❌ Erreur récupération produits depuis Supabase')
+          // Charger le prix de base dynamiquement depuis Supabase
+          const baseProduct = products.find((p: any) => p.id === 'planche-base' || p.category === 'base')
+          if (baseProduct) {
+            const basePrice = baseProduct.sale_price || baseProduct.salePrice
+            setBasePricePerSheet(basePrice)
+            console.log('💰 Prix planche de base chargé depuis Supabase:', basePrice)
+          }
+        }
+        
+        // Fallback : charger depuis le fichier JSON local si aucun upsell trouvé dans Supabase
+        if (!upsellProductsLoaded) {
+          console.log('⚠️ Aucun produit upsell trouvé dans Supabase, chargement depuis le fichier JSON local...')
+          
+          try {
+            // Charger les produits depuis le fichier JSON local
+            const jsonResponse = await fetch('/data/product-settings.json')
+            if (jsonResponse.ok) {
+              const localProducts = await jsonResponse.json()
+              
+              // Filtrer les produits upsell actifs
+              const activeUpsellProducts = localProducts.filter((p: any) => p.active && p.category === 'upsell')
+              console.log('📦 Produits upsell actifs trouvés dans le JSON local:', activeUpsellProducts.map((p: any) => p.name))
+              
+              const convertedProducts: UpsellProduct[] = activeUpsellProducts.map((product: any) => ({
+                id: product.id,
+                name: product.name,
+                description: product.description,
+                originalPrice: product.originalPrice,
+                salePrice: product.salePrice,
+                icon: getIconForProduct(product.id),
+                features: product.features || [],
+                badge: product.badge,
+                popular: product.popular
+              }))
+              setUpsellProducts(convertedProducts)
+              
+              // Charger le prix de base depuis le JSON local
+              const baseProduct = localProducts.find((p: any) => p.id === 'planche-base')
+              if (baseProduct) {
+                setBasePricePerSheet(baseProduct.salePrice)
+                console.log('💰 Prix planche de base chargé depuis le JSON local:', baseProduct.salePrice)
+              }
+              
+              console.log('🏷️ Produits upsell actifs chargés depuis le JSON local:', convertedProducts.length, 'produits')
+              convertedProducts.forEach(p => console.log('  ✅', p.name))
+            } else {
+              console.error('❌ Erreur chargement du fichier JSON local')
+            }
+          } catch (jsonError) {
+            console.error('❌ Erreur lors du chargement du fichier JSON local:', jsonError)
+          }
         }
 
         // Charger les paramètres de livraison depuis le serveur
@@ -232,7 +300,9 @@ export default function PreCommandePage() {
   const totalPrice = Math.max(0, subtotal - discountAmount)
 
   // Fonction pour valider le code de remise
-  const validateDiscountCode = async (code: string) => {
+  // DOCUMENTATION : Utilisation de useCallback pour éviter les re-créations de fonction
+  // qui peuvent causer des re-rendus et la perte de focus
+  const validateDiscountCode = useCallback(async (code: string) => {
     if (!code.trim()) {
       setAppliedDiscount(null)
       setDiscountError('')
@@ -243,12 +313,15 @@ export default function PreCommandePage() {
     setDiscountError('')
 
     try {
+      // Calculer le subtotal au moment de la validation pour avoir la valeur la plus récente
+      const currentSubtotal = basePrice + upsellTotal + shippingCost
+      
       const response = await fetch('/api/validate-discount', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           code: code.trim(),
-          totalAmount: subtotal 
+          totalAmount: currentSubtotal 
         })
       })
 
@@ -269,21 +342,24 @@ export default function PreCommandePage() {
     } finally {
       setIsValidatingDiscount(false)
     }
-  }
+  }, [basePrice, upsellTotal, shippingCost]) // Dépendances nécessaires pour le calcul
 
   // Validation automatique du code quand il change
+  // DOCUMENTATION : Optimisation pour éviter la perte de focus du curseur
+  // Le useEffect ne se déclenche que quand discountCode change, pas subtotal
+  // La validation du montant se fait dans validateDiscountCode directement
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (discountCode) {
+      if (discountCode.trim()) {
         validateDiscountCode(discountCode)
       } else {
         setAppliedDiscount(null)
         setDiscountError('')
       }
-    }, 500) // Debounce de 500ms
+    }, 800) // Debounce augmenté à 800ms pour réduire les appels
 
     return () => clearTimeout(timer)
-  }, [discountCode, subtotal])
+  }, [discountCode]) // Suppression de 'subtotal' des dépendances
 
   const handleProductToggle = (productId: string) => {
     setSelectedProducts(prev => 
@@ -609,12 +685,18 @@ export default function PreCommandePage() {
               <div className="mt-3 space-y-2">
                 <div className="flex gap-2">
                   <input
+                    ref={discountInputRef}
                     type="text"
                     value={discountCode}
-                    onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                    onChange={(e) => {
+                      const newValue = e.target.value.toUpperCase()
+                      setDiscountCode(newValue)
+                    }}
                     placeholder="Entrez votre code"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono uppercase focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     disabled={isValidatingDiscount}
+                    autoComplete="off"
+                    spellCheck={false}
                   />
                   {discountCode && (
                     <button

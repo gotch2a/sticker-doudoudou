@@ -80,21 +80,44 @@ class ShippingSettingsService {
   }
 
   // Calculer les frais de livraison selon les produits sélectionnés
+  // DOCUMENTATION : Calcule les frais de livraison en fonction des produits sélectionnés
+  // Gère les cas où les paramètres ne sont pas chargés avec des valeurs par défaut
   calculateShipping(upsells: string[]): { cost: number, tarif: 'tarif1' | 'tarif2', reason: string } {
     const settings = this.getSettings()
+    
+    // Vérification de sécurité : si les paramètres ne sont pas chargés, utiliser des valeurs par défaut
+    if (!settings || !settings.tarif1 || !settings.tarif2) {
+      console.warn('⚠️ Paramètres de livraison non chargés, utilisation des valeurs par défaut')
+      const hasPhysicalProducts = upsells.some(id => id === 'photo-premium' || id === 'livre-histoire')
+      
+      if (hasPhysicalProducts) {
+        return {
+          cost: 5.8, // Valeur par défaut tarif2
+          tarif: 'tarif2',
+          reason: 'Avec photo ou livre (objets physiques supplémentaires)'
+        }
+      } else {
+        return {
+          cost: 2.5, // Valeur par défaut tarif1
+          tarif: 'tarif1',
+          reason: 'Pour stickers uniquement (planche de base seule ou avec planche bonus)'
+        }
+      }
+    }
+    
     const hasPhysicalProducts = upsells.some(id => id === 'photo-premium' || id === 'livre-histoire')
     
     if (hasPhysicalProducts) {
       return {
-        cost: settings.tarif2.price,
+        cost: settings.tarif2.price || 5.8,
         tarif: 'tarif2',
-        reason: settings.tarif2.description
+        reason: settings.tarif2.description || 'Avec photo ou livre (objets physiques supplémentaires)'
       }
     } else {
       return {
-        cost: settings.tarif1.price,
+        cost: settings.tarif1.price || 2.5,
         tarif: 'tarif1',
-        reason: settings.tarif1.description
+        reason: settings.tarif1.description || 'Pour stickers uniquement (planche de base seule ou avec planche bonus)'
       }
     }
   }
@@ -123,6 +146,9 @@ class ShippingSettingsService {
   }
 
   // Charger depuis le serveur
+  // DOCUMENTATION : Charge les paramètres depuis Supabase et les convertit au format local
+  // Gère la conversion entre la structure Supabase (france_price, letter_price) 
+  // et la structure locale (tarif1, tarif2)
   async loadFromServer(): Promise<ShippingSettings> {
     if (typeof window === 'undefined') return this.getSettings()
     
@@ -130,16 +156,44 @@ class ShippingSettingsService {
       const response = await fetch('/api/admin/shipping')
       
       if (response.ok) {
-        const { settings } = await response.json()
-        this.saveSettings(settings)
-        console.log('✅ Paramètres livraison chargés depuis le serveur')
-        return settings
+        const { success, settings: supabaseSettings } = await response.json()
+        
+        if (success && supabaseSettings) {
+          // Convertir la structure Supabase vers notre format local
+          const convertedSettings: ShippingSettings = {
+            tarif1: {
+              name: 'Livraison Standard',
+              description: 'Pour stickers uniquement (planche de base seule ou avec planche bonus)',
+              price: supabaseSettings.letter_price || 2.5,
+              condition: 'stickers_only',
+              delay: 5,
+              active: true
+            },
+            tarif2: {
+              name: 'Livraison Premium',
+              description: 'Avec photo ou livre (objets physiques supplémentaires)',
+              price: supabaseSettings.france_price || 5.8,
+              condition: 'with_physical_products',
+              delay: 3,
+              active: supabaseSettings.active !== false
+            }
+          }
+          
+          this.saveSettings(convertedSettings)
+          console.log('✅ Paramètres livraison chargés et convertis depuis le serveur')
+          console.log('📋 Tarif1 (stickers):', convertedSettings.tarif1.price + '€')
+          console.log('📋 Tarif2 (avec objets):', convertedSettings.tarif2.price + '€')
+          return convertedSettings
+        } else {
+          console.warn('⚠️ Réponse serveur invalide, utilisation des paramètres locaux')
+          return this.getSettings()
+        }
       } else {
-        console.error('Erreur chargement serveur:', response.statusText)
+        console.error('❌ Erreur chargement serveur:', response.statusText)
         return this.getSettings()
       }
     } catch (error) {
-      console.error('Erreur chargement serveur:', error)
+      console.error('❌ Erreur chargement serveur:', error)
       return this.getSettings()
     }
   }

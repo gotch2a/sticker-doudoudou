@@ -348,13 +348,17 @@ export default function CommandePage() {
               </label>
               <input
                 type="text"
-                name="childName"
+                name="field_child_name_xyz123"
                 value={formData.childName}
                 onChange={(e) => setFormData({ ...formData, childName: e.target.value })}
                 placeholder="Le prénom de votre petit bout"
                 className={`w-full px-4 py-3 rounded-xl border ${
                   errors.childName ? 'border-red-300' : 'border-gray-300'
                 } focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors`}
+                autoComplete="new-password"
+                role="textbox"
+                aria-autocomplete="none"
+                data-form-type="other"
               />
               {errors.childName && (
                 <span className="text-red-600 text-sm mt-1">{errors.childName}</span>
