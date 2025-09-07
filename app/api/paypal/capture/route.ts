@@ -87,8 +87,10 @@ export async function POST(request: NextRequest) {
         numberOfSheets: order.number_of_sheets,
         totalAmount: order.total_amount,
         photoUrl: order.photo_url ? `${baseUrl}${order.photo_url}` : undefined,
-        notes: order.admin_notes || undefined,
-        orderId: order.id
+        notes: order.notes || undefined,
+        orderId: order.id,
+        discountCode: order.discount_code || null,
+        discountAmount: order.discount_amount || 0
       })
       
       console.log('📧 Résultats envoi emails:', emailResults)

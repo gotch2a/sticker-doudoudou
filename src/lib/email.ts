@@ -34,6 +34,8 @@ interface OrderData {
   photoUrl?: string
   notes?: string
   orderId?: string // ID de la commande pour récupérer les articles
+  discountCode?: string | null
+  discountAmount?: number
 }
 
 // Template d'email pour le client
@@ -83,18 +85,21 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
       if (orderData.notes) {
         console.log(`  💭 Notes: "${orderData.notes}"`)
       }
+      if (orderData.discountCode) {
+        console.log(`  🏷️ Code promo: ${orderData.discountCode} (-${orderData.discountAmount?.toFixed(2)}€)`)
+      }
       console.log(`  🎯 Pour activer les vrais emails, configurez RESEND_API_KEY dans .env.local`)
       return { success: true, emailId: 'demo_client_' + Date.now() }
     }
 
     const resend = getResend()
     
-    // En mode développement, utiliser l'email de test autorisé
-    const recipientEmail = process.env.NODE_ENV === 'production' ? orderData.email : getTestEmail()
-    console.log(`📧 Envoi email client à: ${recipientEmail} ${recipientEmail !== orderData.email ? `(original: ${orderData.email})` : ''}`)
+    // Avec le domaine vérifié, on peut envoyer vers toutes les adresses
+    const recipientEmail = orderData.email
+    console.log(`📧 Envoi email client à: ${recipientEmail}`)
     
     const { data, error } = await resend.emails.send({
-      from: 'Doudoudou <onboarding@resend.dev>',
+      from: 'Tagadou <noreply@my.tagadou.fr>',
       to: [recipientEmail],
       subject: `✅ Commande confirmée - ${orderData.orderNumber}`,
       html: `
@@ -103,7 +108,7 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Commande confirmée - Doudoudou</title>
+            <title>Commande confirmée - Tagadou</title>
             <style>
               body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -137,14 +142,6 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
                 color: #ec4899;
                 font-weight: bold;
               }
-              .footer {
-                text-align: center;
-                margin-top: 30px;
-                padding-top: 20px;
-                border-top: 1px solid #e5e7eb;
-                color: #6b7280;
-                font-size: 14px;
-              }
               .emoji {
                 font-size: 1.2em;
               }
@@ -173,33 +170,31 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
           </head>
           <body>
             <div class="header">
-              <h1><span class="emoji">🎨</span> Doudoudou</h1>
-              <p>Votre commande a été confirmée avec succès !</p>
+              <h1><span class="emoji">✅</span> Commande Confirmée !</h1>
+              <p>Votre commande a été validée et est en cours de traitement</p>
             </div>
             
             <div class="content">
-              ${recipientEmail !== orderData.email ? `
-                <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
-                  <p style="margin: 0; color: #92400e; font-size: 14px;">
-                    <strong>🧪 MODE TEST :</strong> Cet email aurait dû être envoyé à <strong>${orderData.email}</strong>
-                  </p>
-                </div>
-              ` : ''}
-              
-              <h2>Bonjour ! <span class="emoji">👋</span></h2>
-              
-              <p>Merci pour votre commande ! Nous avons bien reçu votre demande de transformation du doudou <strong class="highlight">${orderData.petName}</strong> en stickers personnalisés pour <strong class="highlight">${orderData.childName}</strong>.</p>
+              <h2><span class="emoji">🎉</span> Félicitations !</h2>
+              <p>Votre commande <strong>${orderData.orderNumber}</strong> a été confirmée avec succès.</p>
               
               <div class="order-details">
                 <h3><span class="emoji">📋</span> Détails de votre commande</h3>
-                <p><strong>N° de commande :</strong> <span class="highlight">${orderData.orderNumber}</span></p>
-                <p><strong>Doudou :</strong> ${orderData.petName} (${orderData.animalType})</p>
-                <p><strong>Pour :</strong> ${orderData.childName}</p>
+                <p><strong>Doudou :</strong> <span class="highlight">${orderData.petName}</span> (${orderData.animalType})</p>
+                <p><strong>Pour :</strong> <span class="highlight">${orderData.childName}</span></p>
                 <p><strong>Nombre de planches :</strong> ${orderData.numberOfSheets}</p>
                 <p><strong>Montant total :</strong> <span class="highlight">${orderData.totalAmount.toFixed(2)} €</span></p>
               </div>
               
               ${upsellsHtml}
+              
+              ${orderData.discountCode ? `
+                <h3><span class="emoji">🏷️</span> Code promo appliqué</h3>
+                <div class="order-details" style="background: #f0f9ff; border: 2px solid #3b82f6;">
+                  <p><strong>Code utilisé :</strong> <span style="color: #3b82f6; font-weight: bold;">${orderData.discountCode}</span></p>
+                  <p><strong>Remise :</strong> <span style="color: #059669; font-weight: bold;">-${orderData.discountAmount?.toFixed(2)} €</span></p>
+                </div>
+              ` : ''}
               
               ${orderData.notes ? `
                 <h3><span class="emoji">💭</span> Vos commentaires</h3>
@@ -210,23 +205,23 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
               
               <h3><span class="emoji">⏰</span> Prochaines étapes</h3>
               <ol>
-                <li><strong>Création artistique</strong> - Notre artiste va transformer votre photo en magnifiques stickers (2-3 jours ouvrés)</li>
-                <li><strong>Validation</strong> - Nous vous enverrons un aperçu pour validation</li>
-                <li><strong>Production</strong> - Impression haute qualité sur papier premium</li>
-                <li><strong>Expédition</strong> - Envoi sous 24-48h après production</li>
+                <li><strong>Notre artiste</strong> va créer vos stickers personnalisés</li>
+                <li><strong>Validation</strong> : vous recevrez un aperçu pour validation</li>
+                <li><strong>Production</strong> : impression et découpe de vos stickers</li>
+                <li><strong>Livraison</strong> : envoi sous 2-3 jours ouvrés</li>
               </ol>
               
-              <p><span class="emoji">📧</span> <strong>Vous recevrez un email de confirmation dès que notre artiste aura terminé la création de vos stickers !</strong></p>
+              <div style="background: #f0f9ff; border-left: 4px solid #06b6d4; padding: 15px; margin: 20px 0;">
+                <p style="margin: 0; color: #0c4a6e;">
+                  <strong>📧 Contact :</strong> Si vous avez des questions, répondez simplement à cet email.
+                </p>
+              </div>
               
-              <p>Si vous avez des questions, n'hésitez pas à nous contacter à <a href="mailto:contact@doudoudoud.fr" style="color: #ec4899;">contact@doudoudoud.fr</a></p>
-              
-              <p>Merci de nous faire confiance ! <span class="emoji">❤️</span></p>
-              
-              <p>L'équipe Doudoudou</p>
+              <p>Merci de votre confiance ! <span class="emoji">🎨</span></p>
             </div>
             
             <div class="footer">
-              <p>© 2024 Doudoudou - Transformez les doudous en souvenirs magiques</p>
+              <p>© 2024 Tagadou - Transformez les doudous en souvenirs magiques</p>
             </div>
           </body>
         </html>
@@ -250,7 +245,7 @@ export async function sendClientConfirmationEmail(orderData: OrderData) {
 export async function sendArtistNotificationEmail(orderData: OrderData) {
   try {
     // Email de l'artiste (en mode test, sera remplacé par l'email autorisé)
-    const artistEmail = process.env.ARTIST_EMAIL || 'artiste@stickerdoudou.fr'
+    const artistEmail = process.env.ARTIST_EMAIL || 'coucoutagadou@gmail.com'
     
     // Mode démo si Resend n'est pas configuré
     if (isDemoMode()) {
@@ -261,18 +256,21 @@ export async function sendArtistNotificationEmail(orderData: OrderData) {
       console.log(`  🐾 Doudou: ${orderData.petName} (${orderData.animalType})`)
       console.log(`  👶 Pour: ${orderData.childName}`)
       console.log(`  📊 ${orderData.numberOfSheets} planche(s) - ${orderData.totalAmount.toFixed(2)} €`)
+      if (orderData.discountCode) {
+        console.log(`  🏷️ Code promo: ${orderData.discountCode} (-${orderData.discountAmount?.toFixed(2)}€)`)
+      }
       console.log(`  🎯 Pour activer les vrais emails, configurez RESEND_API_KEY dans .env.local`)
       return { success: true, emailId: 'demo_artist_' + Date.now() }
     }
 
     const resend = getResend()
     
-    // En mode développement, utiliser l'email de test autorisé
-    const recipientEmail = process.env.NODE_ENV === 'production' ? artistEmail : getTestEmail()
-    console.log(`🎨 Envoi email artiste à: ${recipientEmail} ${recipientEmail !== artistEmail ? `(original: ${artistEmail})` : ''}`)
+    // Avec le domaine vérifié, on peut envoyer vers toutes les adresses
+    const recipientEmail = artistEmail
+    console.log(`🎨 Envoi email artiste à: ${recipientEmail}`)
     
     const { data, error } = await resend.emails.send({
-      from: 'Doudoudou <onboarding@resend.dev>',
+      from: 'Tagadou <noreply@my.tagadou.fr>',
       to: [recipientEmail],
       subject: `🎨 Nouvelle commande à traiter - ${orderData.orderNumber}`,
       html: `
@@ -352,7 +350,7 @@ export async function sendArtistNotificationEmail(orderData: OrderData) {
           </head>
           <body>
             <div class="header">
-              <h1><span class="emoji">🎨</span> Nouvelle Commande Doudoudou</h1>
+              <h1><span class="emoji">🎨</span> Nouvelle Commande Tagadou</h1>
               <p>Une nouvelle commande vient d'être passée et attend votre talent !</p>
             </div>
             
@@ -379,6 +377,7 @@ export async function sendArtistNotificationEmail(orderData: OrderData) {
                 <p><strong>Pour l'enfant :</strong> <span class="highlight">${orderData.childName}</span></p>
                 <p><strong>Nombre de planches demandées :</strong> ${orderData.numberOfSheets}</p>
                 ${orderData.photoUrl ? `<p><strong>Photo fournie :</strong> Voir en pièce jointe ou dans l'admin</p>` : ''}
+                ${orderData.discountCode ? `<p><strong>Code promo appliqué :</strong> <span style="color: #059669; font-weight: bold;">${orderData.discountCode} (-${orderData.discountAmount?.toFixed(2)}€)</span></p>` : ''}
               </div>
               
               ${orderData.notes ? `
@@ -429,33 +428,27 @@ export async function sendArtistNotificationEmail(orderData: OrderData) {
   }
 }
 
-// Fonction pour envoyer les deux emails en parallèle
+// Fonction pour envoyer les deux emails de confirmation
 export async function sendOrderConfirmationEmails(orderData: OrderData) {
   try {
     console.log('📧 Envoi des emails de confirmation...')
     
-    // Envoyer les deux emails en parallèle
-    const [clientResult, artistResult] = await Promise.allSettled([
-      sendClientConfirmationEmail(orderData),
-      sendArtistNotificationEmail(orderData)
-    ])
+    // Envoyer l'email de notification à l'artiste
+    const artistResult = await sendArtistNotificationEmail(orderData)
     
-    const results = {
-      client: clientResult.status === 'fulfilled' ? clientResult.value : { success: false, error: clientResult.reason },
-      artist: artistResult.status === 'fulfilled' ? artistResult.value : { success: false, error: artistResult.reason }
-    }
+    // Pause de 1 seconde pour éviter le rate limiting (2 req/sec max)
+    await new Promise(resolve => setTimeout(resolve, 1000))
     
-    console.log('📧 Résultats envoi emails:', {
-      client: results.client.success ? '✅' : '❌',
-      artist: results.artist.success ? '✅' : '❌'
-    })
+    // Envoyer l'email de confirmation au client
+    const clientResult = await sendClientConfirmationEmail(orderData)
     
-    return results
-  } catch (error) {
-    console.error('❌ Erreur générale envoi emails:', error)
+    // Retourner les résultats
     return {
-      client: { success: false, error: 'Erreur système' },
-      artist: { success: false, error: 'Erreur système' }
+      artist: artistResult,
+      client: clientResult
     }
+  } catch (error) {
+    console.error('❌ Erreur envoi emails de confirmation:', error)
+    throw error
   }
 }

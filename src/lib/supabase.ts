@@ -62,6 +62,8 @@ export interface Order {
   number_of_sheets: number
   total_amount: number
   notes?: string
+  discount_code?: string | null
+  discount_amount?: number
   status: 'nouveau' | 'en_cours' | 'termine' | 'expedie' | 'livre'
   payment_status: 'pending' | 'paid' | 'failed' | 'refunded'
   payment_reference: string | null // ID PayPal ou autre système de paiement
@@ -122,6 +124,8 @@ export class OrderService {
     number_of_sheets: number
     notes?: string
     total_amount?: number
+    discount_code?: string | null
+    discount_amount?: number
   }) {
     const orderNumber = `CMD-${Date.now()}`
     const totalAmount = orderData.total_amount || 0
@@ -142,6 +146,8 @@ export class OrderService {
         number_of_sheets: orderData.number_of_sheets,
         total_amount: totalAmount,
         notes: orderData.notes || null,
+        discount_code: orderData.discount_code || null,
+        discount_amount: orderData.discount_amount || 0,
         status: 'nouveau'
       })
       .select()

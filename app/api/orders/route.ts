@@ -46,6 +46,9 @@ interface OrderData {
   email: string
   upsells?: string[]
   totalAmount?: number
+  subtotal?: number
+  discountCode?: string | null
+  discountAmount?: number
 }
 
 export async function POST(request: NextRequest) {
@@ -152,7 +155,9 @@ export async function POST(request: NextRequest) {
       postal_code: orderData.postalCode || '',
       number_of_sheets: orderData.numberOfSheets,
       notes: orderData.notes || '',
-      total_amount: totalAmount
+      total_amount: totalAmount,
+      discount_code: orderData.discountCode || null,
+      discount_amount: orderData.discountAmount || 0
     })
 
     console.log('✅ Commande créée en base:', newOrder.order_number, 'Total:', newOrder.total_amount, '€')
@@ -177,6 +182,7 @@ export async function POST(request: NextRequest) {
 📧 Contact: ${orderData.email}
 📦 Planches: ${orderData.numberOfSheets} (${basePrice.toFixed(2)}€)
 ${upsellDetails ? '🎁 PRODUITS BONUS:' + upsellDetails : ''}
+${orderData.discountCode ? `🏷️ CODE PROMO: ${orderData.discountCode} (-${orderData.discountAmount?.toFixed(2)}€)` : ''}
 💰 TOTAL: ${totalAmount.toFixed(2)}€
 📍 Adresse: ${orderData.address || 'Non renseignée'}, ${orderData.city || ''} ${orderData.postalCode || ''}
 📝 Notes: ${orderData.notes || 'Aucune note'}
@@ -193,11 +199,21 @@ ${upsellDetails ? '🎁 PRODUITS BONUS:' + upsellDetails : ''}
     
     // Vérifier si PayPal est configuré
     if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
-      console.log('🚨 PayPal non configuré')
+      console.log('🚨 PayPal non configuré - Mode démo activé')
+      
+      // Mode démo : pas de paiement PayPal
+      await OrderService.updatePaymentStatus(newOrder.id, 'pending', `demo_${Date.now()}`)
+      
+      // En mode démo, on peut envoyer les emails directement (optionnel)
+      // Les emails seront envoyés depuis la page de confirmation
+      
       return NextResponse.json({
-        success: false,
-        error: 'PayPal non configuré. Veuillez configurer PAYPAL_CLIENT_ID et PAYPAL_CLIENT_SECRET.'
-      }, { status: 500 })
+        success: true,
+        orderNumber: newOrder.order_number,
+        orderId: newOrder.id,
+        totalAmount: newOrder.total_amount,
+        message: 'Commande créée en mode démo (PayPal non configuré)'
+      })
     }
 
     console.log('✅ PayPal configuré, utilisation du vrai flux')
@@ -215,7 +231,7 @@ ${upsellDetails ? '🎁 PRODUITS BONUS:' + upsellDetails : ''}
               currency_code: 'EUR',
               value: newOrder.total_amount.toFixed(2)
             },
-            description: `Stickers DOUDOU - ${orderData.petName} pour ${orderData.childName}${orderData.upsells && orderData.upsells.length > 0 ? ` + ${orderData.upsells.length} bonus` : ''}`
+            description: `Stickers DOUDOU - ${orderData.petName} pour ${orderData.childName}${(orderData.upsells || []).length > 0 ? ` + ${(orderData.upsells || []).length} bonus` : ''}`
           }
         ],
         application_context: {

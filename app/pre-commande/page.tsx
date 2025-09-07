@@ -16,7 +16,10 @@ import {
   ShoppingCart,
   Check,
   Plus,
-  X
+  X,
+  ChevronDown,
+  ChevronUp,
+  Tag
 } from 'lucide-react'
 
 interface UpsellProduct {
@@ -101,6 +104,13 @@ export default function PreCommandePage() {
   const [upsellProducts, setUpsellProducts] = useState<UpsellProduct[]>([])
   const [shippingCost, setShippingCost] = useState(3.5) // Valeur par défaut
   const [shippingReason, setShippingReason] = useState('Pour stickers uniquement (planche de base seule ou avec planche bonus)')
+  
+  // États pour le code de remise
+  const [discountCode, setDiscountCode] = useState('')
+  const [appliedDiscount, setAppliedDiscount] = useState<any>(null)
+  const [discountError, setDiscountError] = useState('')
+  const [isValidatingDiscount, setIsValidatingDiscount] = useState(false)
+  const [showDiscountField, setShowDiscountField] = useState(false)
 
   // Charger les produits upsell actifs au montage du composant
   useEffect(() => {
@@ -216,7 +226,64 @@ export default function PreCommandePage() {
   
   // Les frais de livraison sont maintenant gérés par les variables d'état
   
-  const totalPrice = basePrice + upsellTotal + shippingCost
+  // Calcul du total avec remise
+  const subtotal = basePrice + upsellTotal + shippingCost
+  const discountAmount = appliedDiscount ? appliedDiscount.discountAmount : 0
+  const totalPrice = Math.max(0, subtotal - discountAmount)
+
+  // Fonction pour valider le code de remise
+  const validateDiscountCode = async (code: string) => {
+    if (!code.trim()) {
+      setAppliedDiscount(null)
+      setDiscountError('')
+      return
+    }
+
+    setIsValidatingDiscount(true)
+    setDiscountError('')
+
+    try {
+      const response = await fetch('/api/validate-discount', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          code: code.trim(),
+          totalAmount: subtotal 
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setAppliedDiscount(result.discountCode)
+        setDiscountError('')
+        console.log('✅ Code de remise appliqué:', result.discountCode)
+      } else {
+        setAppliedDiscount(null)
+        setDiscountError(result.error)
+      }
+    } catch (error) {
+      console.error('❌ Erreur validation code de remise:', error)
+      setAppliedDiscount(null)
+      setDiscountError('Erreur de validation du code')
+    } finally {
+      setIsValidatingDiscount(false)
+    }
+  }
+
+  // Validation automatique du code quand il change
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (discountCode) {
+        validateDiscountCode(discountCode)
+      } else {
+        setAppliedDiscount(null)
+        setDiscountError('')
+      }
+    }, 500) // Debounce de 500ms
+
+    return () => clearTimeout(timer)
+  }, [discountCode, subtotal])
 
   const handleProductToggle = (productId: string) => {
     setSelectedProducts(prev => 
@@ -234,7 +301,7 @@ export default function PreCommandePage() {
     setIsProcessing(true)
     
     try {
-      // Création de la commande avec upsells inclus
+      // Création de la commande avec upsells et code de remise inclus
       const orderData = {
         petName,
         animalType,
@@ -248,7 +315,10 @@ export default function PreCommandePage() {
         numberOfSheets,
         photo,
         upsells: selectedProducts,
-        totalAmount: totalPrice
+        totalAmount: totalPrice,
+        subtotal: subtotal,
+        discountCode: appliedDiscount ? appliedDiscount.code : null,
+        discountAmount: appliedDiscount ? appliedDiscount.discountAmount : 0
       }
 
       console.log('📝 Données envoyées à l\'API:', {
@@ -518,6 +588,74 @@ export default function PreCommandePage() {
             </div>
           )}
 
+          {/* Section code de remise */}
+          <div className="py-3 border-b border-gray-200">
+            <button
+              onClick={() => setShowDiscountField(!showDiscountField)}
+              className="flex items-center justify-between w-full text-left text-sm text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Tag className="w-4 h-4" />
+                Avez-vous un code de remise ?
+              </span>
+              {showDiscountField ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+            
+            {showDiscountField && (
+              <div className="mt-3 space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                    placeholder="Entrez votre code"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono uppercase focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    disabled={isValidatingDiscount}
+                  />
+                  {discountCode && (
+                    <button
+                      onClick={() => {
+                        setDiscountCode('')
+                        setAppliedDiscount(null)
+                        setDiscountError('')
+                      }}
+                      className="px-3 py-2 text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                
+                {isValidatingDiscount && (
+                  <div className="text-xs text-gray-500 flex items-center gap-2">
+                    <div className="animate-spin w-3 h-3 border border-gray-300 border-t-primary-500 rounded-full"></div>
+                    Validation en cours...
+                  </div>
+                )}
+                
+                {discountError && (
+                  <div className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+                    {discountError}
+                  </div>
+                )}
+                
+                {appliedDiscount && (
+                  <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded flex items-center gap-2">
+                    <Check className="w-3 h-3" />
+                    Code appliqué: -{appliedDiscount.discountAmount.toFixed(2)}€
+                    {appliedDiscount.description && (
+                      <span className="text-gray-500">({appliedDiscount.description})</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Frais de livraison */}
           <div className="flex items-center justify-between py-3 border-b border-gray-200">
             <span className="text-gray-700 flex items-center gap-2">
@@ -529,19 +667,38 @@ export default function PreCommandePage() {
 
           {/* Récapitulatif des remises si applicable */}
           {(() => {
-            const totalSavings = calculateTotalSavings()
-            const originalTotal = calculateOriginalTotal()
+            const productSavings = calculateTotalSavings()
+            const codeDiscount = appliedDiscount ? appliedDiscount.discountAmount : 0
+            const totalSavings = productSavings + codeDiscount
             
             return totalSavings > 0 ? (
               <div className="py-3 border-b border-gray-200 bg-green-50 -mx-4 px-4 rounded-lg">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Sous-total (prix normal)</span>
-                  <span className="text-gray-600 line-through">{originalTotal.toFixed(2)}€</span>
+                  <span className="text-gray-600">Sous-total</span>
+                  <span className="text-gray-600">{subtotal.toFixed(2)}€</span>
                 </div>
-                <div className="flex items-center justify-between text-sm font-medium">
-                  <span className="text-green-700 flex items-center gap-1">
-                    💰 Remise totale
-                  </span>
+                
+                {productSavings > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-green-700 flex items-center gap-1">
+                      🏷️ Remises produits
+                    </span>
+                    <span className="text-green-700">-{productSavings.toFixed(2)}€</span>
+                  </div>
+                )}
+                
+                {codeDiscount > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-green-700 flex items-center gap-1">
+                      <Tag className="w-3 h-3" />
+                      Code {appliedDiscount.code}
+                    </span>
+                    <span className="text-green-700">-{codeDiscount.toFixed(2)}€</span>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between text-sm font-medium pt-1 border-t border-green-200 mt-1">
+                  <span className="text-green-700">Économies totales</span>
                   <span className="text-green-700">-{totalSavings.toFixed(2)}€</span>
                 </div>
               </div>

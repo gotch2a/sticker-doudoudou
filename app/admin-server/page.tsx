@@ -10,42 +10,6 @@ export default function AdminServerPage() {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'shipping' | 'discounts'>('orders')
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null)
-  const [securePhotoUrls, setSecurePhotoUrls] = useState<Record<string, string>>({})
-
-  // Générer une URL sécurisée pour une photo
-  const generateSecurePhotoUrl = async (photoUrl: string): Promise<string> => {
-    try {
-      // Si l'URL est déjà sécurisée ou si c'est un placeholder, la retourner telle quelle
-      if (!photoUrl || photoUrl.includes('?token=') || photoUrl.includes('placeholder')) {
-        return photoUrl
-      }
-
-      // Si on a déjà l'URL sécurisée en cache
-      if (securePhotoUrls[photoUrl]) {
-        return securePhotoUrls[photoUrl]
-      }
-
-      // Générer l'URL sécurisée via l'API
-      const response = await fetch('/api/secure-photo-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ photoUrl })
-      })
-
-      if (response.ok) {
-        const { secureUrl } = await response.json()
-        // Mettre en cache
-        setSecurePhotoUrls(prev => ({ ...prev, [photoUrl]: secureUrl }))
-        return secureUrl
-      } else {
-        console.warn('⚠️ Impossible de générer URL sécurisée pour:', photoUrl)
-        return '/images/placeholder-doudou.svg'
-      }
-    } catch (error) {
-      console.error('❌ Erreur génération URL sécurisée:', error)
-      return '/images/placeholder-doudou.svg'
-    }
-  }
 
   // Charger les commandes via API serveur
   const loadOrdersFromServer = async () => {
@@ -72,72 +36,18 @@ export default function AdminServerPage() {
     }
   }
 
-  // Composant d'image sécurisée
-  const SecureImage = ({ src, alt, width, height, className, onError }: {
-    src: string
-    alt: string
-    width: number
-    height: number
-    className?: string
-    onError?: (e: any) => void
-  }) => {
-    const [secureSrc, setSecureSrc] = useState<string>(src)
-    const [isLoading, setIsLoading] = useState(true)
-
-    useEffect(() => {
-      const loadSecureUrl = async () => {
-        if (src && !src.includes('placeholder') && !src.includes('?token=')) {
-          try {
-            const secureUrl = await generateSecurePhotoUrl(src)
-            setSecureSrc(secureUrl)
-          } catch (error) {
-            console.error('Erreur chargement image sécurisée:', error)
-            setSecureSrc('/images/placeholder-doudou.svg')
-          }
-        } else {
-          setSecureSrc(src || '/images/placeholder-doudou.svg')
-        }
-        setIsLoading(false)
-      }
-
-      loadSecureUrl()
-    }, [src])
-
-    if (isLoading) {
-      return (
-        <div className={`${className} bg-gray-200 animate-pulse flex items-center justify-center`}>
-          <span className="text-gray-400">📷</span>
-        </div>
-      )
-    }
-
-    return (
-      <Image
-        src={secureSrc}
-        alt={alt}
-        width={width}
-        height={height}
-        className={className}
-        onError={(e) => {
-          setSecureSrc('/images/placeholder-doudou.svg')
-          onError?.(e)
-        }}
-      />
-    )
-  }
-
   useEffect(() => {
     loadOrdersFromServer()
   }, [])
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
-      try {
-        const response = await fetch(`/api/admin/orders/${orderId}/status`, {
-          method: 'PATCH',
+    try {
+      const response = await fetch(`/api/admin/orders/${orderId}/status`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus })
-        })
-
+        body: JSON.stringify({ status: newStatus })
+      })
+      
       if (response.ok) {
         // Recharger les commandes
         await loadOrdersFromServer()
@@ -185,8 +95,8 @@ export default function AdminServerPage() {
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <h1 className="text-3xl font-bold text-green-800">✅ Administration Doudoudou</h1>
-          <p className="text-green-700">Interface d'administration entièrement fonctionnelle.</p>
+          <h1 className="text-3xl font-bold text-green-800">✅ Administration Doudoudou - Mode Serveur</h1>
+          <p className="text-green-700">Cette version fonctionne entièrement via API serveur (contournement du problème client).</p>
           <p className="text-sm text-green-600 mt-2">📊 {orders.length} commandes chargées avec succès</p>
         </div>
         
@@ -340,38 +250,19 @@ export default function AdminServerPage() {
                         </div>
                       </div>
 
-                      {/* Détails du doudou avec image */}
+                      {/* Détails du doudou */}
                       <div className="lg:col-span-3">
-                        <div className="bg-blue-50 p-4 rounded-lg h-[160px] flex flex-row gap-3">
-                          {/* Image du doudou */}
-                          {order.photo_url ? (
-                            <div className="flex-shrink-0">
-                              <div className="w-20 h-20 bg-white rounded-lg border-2 border-blue-200 overflow-hidden">
-                                <SecureImage
-                                  src={order.photo_url}
-                                  alt={`Photo de ${order.pet_name}`}
-                                  width={80}
-                                  height={80}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex-shrink-0">
-                              <div className="w-20 h-20 bg-gray-100 rounded-lg border-2 border-gray-200 flex items-center justify-center">
-                                <span className="text-gray-400 text-2xl">🧸</span>
-                                </div>
+                        <div className="bg-blue-50 p-4 rounded-lg h-[160px] flex flex-col">
+                          <h3 className="font-bold text-gray-900 mb-2">🧸 Doudou</h3>
+                          <p className="font-semibold text-blue-800">{order.pet_name}</p>
+                          <p className="text-sm text-blue-600">{order.animal_type}</p>
+                          <p className="text-sm text-gray-600">{order.number_of_sheets} planche(s)</p>
+                          
+                          {order.photo_url && (
+                            <div className="mt-auto">
+                              <div className="text-xs text-blue-600">📸 Photo disponible</div>
                             </div>
                           )}
-                          
-                          {/* Informations du doudou */}
-                          <div className="flex-1 flex flex-col">
-                            <h3 className="font-bold text-gray-900 mb-2">🧸 Doudou</h3>
-                            <p className="font-semibold text-blue-800">{order.pet_name}</p>
-                            <p className="text-sm text-blue-600">{order.animal_type}</p>
-                            <p className="text-sm text-gray-600">{order.number_of_sheets} planche(s)</p>
-                            <p className="text-xs text-blue-500 mt-auto">Pour {order.child_name} ({order.child_age || 'âge non spécifié'})</p>
-                          </div>
                         </div>
                       </div>
 
@@ -448,10 +339,10 @@ Notes: ${order.notes || 'Aucune note'}`
           </div>
         )}
 
-        {/* Modal détails commande enrichi */}
+        {/* Modal détails commande */}
         {selectedOrder && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex justify-between items-start mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">
@@ -465,207 +356,52 @@ Notes: ${order.notes || 'Aucune note'}`
                   </button>
                 </div>
 
-                {/* Première ligne - Informations principales */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="font-semibold text-gray-900 mb-3">📋 Informations générales</h3>
                     <div className="space-y-2">
                       <p><strong>Numéro:</strong> {selectedOrder.order_number}</p>
                       <p><strong>Date:</strong> {new Date(selectedOrder.created_at).toLocaleString('fr-FR')}</p>
-                      <p><strong>Dernière MAJ:</strong> {new Date(selectedOrder.updated_at).toLocaleString('fr-FR')}</p>
-                      <p><strong>Statut:</strong> <span className={`px-2 py-1 rounded text-sm font-medium ${
-                          selectedOrder.status === 'nouveau' ? 'bg-yellow-100 text-yellow-800' :
-                          selectedOrder.status === 'en_cours' ? 'bg-blue-100 text-blue-800' :
-                          selectedOrder.status === 'termine' ? 'bg-green-100 text-green-800' :
-                          selectedOrder.status === 'expedie' ? 'bg-purple-100 text-purple-800' :
-                          'bg-gray-100 text-gray-800'
-                      }`}>{selectedOrder.status.replace('_', ' ').toUpperCase()}</span></p>
-                      <p><strong>Total:</strong> <span className="text-lg font-bold text-green-600">{selectedOrder.total_amount}€</span></p>
-                      {selectedOrder.discount_code && (
-                        <>
-                          <p><strong>Code remise:</strong> <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm">{selectedOrder.discount_code}</span></p>
-                          <p><strong>Réduction:</strong> <span className="text-red-600">-{selectedOrder.discount_amount}€</span></p>
-                        </>
-                      )}
-                      <p><strong>Paiement:</strong> <span className={`px-2 py-1 rounded text-sm ${
-                        selectedOrder.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>{selectedOrder.payment_status}</span></p>
+                      <p><strong>Statut:</strong> {selectedOrder.status}</p>
+                      <p><strong>Total:</strong> {selectedOrder.total_amount}€</p>
                     </div>
                   </div>
 
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <h3 className="font-semibold text-gray-900 mb-3">🧸 Détails du doudou</h3>
                     <div className="space-y-2">
-                      <p><strong>Surnom:</strong> <span className="text-blue-800 font-semibold">{selectedOrder.pet_name}</span></p>
+                      <p><strong>Surnom:</strong> {selectedOrder.pet_name}</p>
                       <p><strong>Type:</strong> {selectedOrder.animal_type}</p>
-                      <p><strong>Pour l'enfant:</strong> <span className="text-blue-600">{selectedOrder.child_name}</span></p>
-                      <p><strong>Âge de l'enfant:</strong> {selectedOrder.child_age || 'Non spécifié'}</p>
-                      <p><strong>Planches:</strong> <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">{selectedOrder.number_of_sheets} planche(s)</span></p>
+                      <p><strong>Pour l'enfant:</strong> {selectedOrder.child_name}</p>
+                      <p><strong>Planches:</strong> {selectedOrder.number_of_sheets}</p>
                       {selectedOrder.notes && (
-                      <div>
-                          <p><strong>Notes spéciales:</strong></p>
-                          <div className="bg-blue-100 p-2 rounded text-sm mt-1">{selectedOrder.notes}</div>
-                            </div>
-                          )}
+                        <p><strong>Notes:</strong> {selectedOrder.notes}</p>
+                      )}
                     </div>
                   </div>
+                </div>
 
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-900 mb-3">👤 Informations client</h3>
-                    <div className="space-y-2">
-                      <p><strong>Email:</strong> <a href={`mailto:${selectedOrder.client_email}`} className="text-green-600 hover:underline">{selectedOrder.client_email}</a></p>
-                      <p><strong>Adresse:</strong></p>
-                      <div className="bg-green-100 p-2 rounded text-sm">
-                        {selectedOrder.address}<br/>
-                        {selectedOrder.city} {selectedOrder.postal_code}
-                    </div>
-                  </div>
-                    </div>
-                  </div>
-
-                {/* Deuxième ligne - Image et actions */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Image du doudou */}
-                  {selectedOrder.photo_url && (
-                    <div className="bg-purple-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-gray-900 mb-3">📸 Photo du doudou</h3>
-                      <div className="flex justify-center">
-                        <div className="max-w-sm">
-                          <SecureImage
-                            src={selectedOrder.photo_url}
-                            alt={`Photo de ${selectedOrder.pet_name}`}
-                            width={300}
-                            height={300}
-                            className="w-full h-auto rounded-lg border-2 border-purple-200 shadow-md"
-                          />
-                          <p className="text-center text-sm text-purple-600 mt-2">
-                            Photo de {selectedOrder.pet_name} ({selectedOrder.animal_type})
-                          </p>
-                        </div>
-                              </div>
-                            </div>
-                  )}
-
-                  {/* Brief artiste */}
-                  <div className="bg-orange-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-900 mb-3">🎨 Brief artiste</h3>
-                    <div className="bg-white p-3 rounded border text-sm font-mono whitespace-pre-line">
-{`BRIEF ARTISTE - Commande ${selectedOrder.order_number}
-═══════════════════════════════════════════════
-
-📋 COMMANDE
-• Numéro: ${selectedOrder.order_number}
-• Date: ${new Date(selectedOrder.created_at).toLocaleDateString('fr-FR')}
-• Statut: ${selectedOrder.status.toUpperCase()}
-
-🧸 DOUDOU À CRÉER
-• Surnom: ${selectedOrder.pet_name}
-• Type: ${selectedOrder.animal_type}
-• Pour l'enfant: ${selectedOrder.child_name} (${selectedOrder.child_age || 'âge non spécifié'})
-• Nombre de planches: ${selectedOrder.number_of_sheets}
-
-📝 INSTRUCTIONS SPÉCIALES
-${selectedOrder.notes || 'Aucune instruction particulière'}
-
-📸 PHOTO
-${selectedOrder.photo_url ? 'Photo disponible - voir l\'interface admin' : 'Aucune photo fournie'}
-
-💰 COMMANDE
-• Total: ${selectedOrder.total_amount}€
-${selectedOrder.discount_code ? `• Code remise: ${selectedOrder.discount_code} (-${selectedOrder.discount_amount}€)` : ''}
-
-📦 LIVRAISON
-• ${selectedOrder.address}
-• ${selectedOrder.city} ${selectedOrder.postal_code}
-
-📧 CONTACT CLIENT
-• ${selectedOrder.client_email}`}
-                          </div>
-                        <button 
-                      onClick={() => {
-                        const brief = `BRIEF ARTISTE - Commande ${selectedOrder.order_number}
-═══════════════════════════════════════════════
-
-📋 COMMANDE
-• Numéro: ${selectedOrder.order_number}
-• Date: ${new Date(selectedOrder.created_at).toLocaleDateString('fr-FR')}
-• Statut: ${selectedOrder.status.toUpperCase()}
-
-🧸 DOUDOU À CRÉER
-• Surnom: ${selectedOrder.pet_name}
-• Type: ${selectedOrder.animal_type}
-• Pour l'enfant: ${selectedOrder.child_name} (${selectedOrder.child_age || 'âge non spécifié'})
-• Nombre de planches: ${selectedOrder.number_of_sheets}
-
-📝 INSTRUCTIONS SPÉCIALES
-${selectedOrder.notes || 'Aucune instruction particulière'}
-
-📸 PHOTO
-${selectedOrder.photo_url ? 'Photo disponible - voir l\'interface admin' : 'Aucune photo fournie'}
-
-💰 COMMANDE
-• Total: ${selectedOrder.total_amount}€
-${selectedOrder.discount_code ? `• Code remise: ${selectedOrder.discount_code} (-${selectedOrder.discount_amount}€)` : ''}
-
-📦 LIVRAISON
-• ${selectedOrder.address}
-• ${selectedOrder.city} ${selectedOrder.postal_code}
-
-📧 CONTACT CLIENT
-• ${selectedOrder.client_email}`
-                        
-                        navigator.clipboard.writeText(brief)
-                        alert('Brief artiste copié dans le presse-papiers !')
-                      }}
-                      className="w-full mt-3 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
-                    >
-                      📋 Copier le brief complet
-              </button>
-            </div>
-                        </div>
-                        
-                {/* Boutons de fermeture */}
                 <div className="mt-6 flex gap-3">
-                        <button 
+                  <button 
                     onClick={() => setSelectedOrder(null)}
                     className="flex-1 border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-50 font-medium"
-                        >
-                    Fermer
-                        </button>
-                  <button
-                    onClick={async () => {
-                      const url = selectedOrder.photo_url
-                      if (url) {
-                        try {
-                          const secureUrl = await generateSecurePhotoUrl(url)
-                          window.open(secureUrl, '_blank')
-                        } catch (error) {
-                          console.error('Erreur ouverture photo:', error)
-                          alert('Impossible d\'ouvrir la photo')
-                        }
-                      } else {
-                        alert('Aucune photo disponible pour cette commande')
-                      }
-                    }}
-                    className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
-                    disabled={!selectedOrder.photo_url}
                   >
-                    🖼️ Voir la photo en grand
+                    Fermer
                   </button>
-                      </div>
-                    </div>
-                  </div>
+                </div>
               </div>
-            )}
+            </div>
+          </div>
+        )}
 
-        <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="font-bold text-blue-800 mb-2">✅ Interface Admin Optimisée</h3>
-          <p className="text-blue-700">
-            Interface d'administration haute performance avec architecture serveur optimisée.
-            Toutes les fonctionnalités sont disponibles et opérationnelles !
+        <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h3 className="font-bold text-yellow-800 mb-2">⚡ Mode Serveur Actif</h3>
+          <p className="text-yellow-700">
+            Cette version contourne le problème "Failed to fetch" en utilisant uniquement des API serveur.
+            Toutes les fonctionnalités principales sont disponibles !
           </p>
-              </div>
-              </div>
+        </div>
+      </div>
     </main>
   )
 }

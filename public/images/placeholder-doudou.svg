@@ -1,0 +1,24 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond -->
+  <rect width="200" height="200" fill="#F3F4F6"/>
+  
+  <!-- Doudou stylisé -->
+  <circle cx="100" cy="80" r="35" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2"/>
+  
+  <!-- Yeux -->
+  <circle cx="90" cy="75" r="4" fill="#374151"/>
+  <circle cx="110" cy="75" r="4" fill="#374151"/>
+  
+  <!-- Nez -->
+  <circle cx="100" cy="85" r="2" fill="#F59E0B"/>
+  
+  <!-- Corps -->
+  <ellipse cx="100" cy="140" rx="25" ry="35" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2"/>
+  
+  <!-- Bras -->
+  <ellipse cx="70" cy="130" rx="8" ry="20" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2"/>
+  <ellipse cx="130" cy="130" rx="8" ry="20" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2"/>
+  
+  <!-- Texte -->
+  <text x="100" y="190" text-anchor="middle" fill="#9CA3AF" font-size="12" font-family="Arial, sans-serif">Pas d'image</text>
+</svg>

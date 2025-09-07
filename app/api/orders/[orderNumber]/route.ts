@@ -58,6 +58,8 @@ export async function GET(
       photoUrl: order.photo_url,
       createdAt: order.created_at,
       notes: order.notes || null,
+      discountCode: order.discount_code || null,
+      discountAmount: order.discount_amount || 0,
       upsells: upsells
     }
 
