@@ -1,10 +1,6 @@
 'use client'
 
 import { 
-  Camera, 
-  Heart,
-  Star,
-  Gift,
   ArrowRight,
   ChevronLeft,
   ChevronRight
@@ -269,9 +265,9 @@ export default function Home() {
       {/* Hero Section */}
       <section className="px-4 py-8 sm:py-16">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="mb-8 animate-fade-in">
+          <div className="mb-6 animate-fade-in">
             {/* Logo TAGADOU */}
-            <div className="flex justify-center mb-8">
+            <div className="flex justify-center mb-4">
               <div className="w-96 h-96 sm:w-[32rem] sm:h-[32rem]">
                 <Image
                   src="/images/tagadou-logo.png"
@@ -281,11 +277,6 @@ export default function Home() {
                   className="w-full h-full object-contain drop-shadow-lg"
                 />
               </div>
-            </div>
-            
-            <div className="inline-flex items-center gap-2 bg-sage-100 text-sage-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <Heart className="w-4 h-4" />
-              Pour les petits cœurs
             </div>
             
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
@@ -315,24 +306,45 @@ export default function Home() {
           {/* Preview Cards */}
           <div className="grid sm:grid-cols-3 gap-6 max-w-3xl mx-auto animate-fade-in-slow">
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="w-12 h-12 bg-sage-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <Camera className="w-6 h-6 text-sage-600" />
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 mx-auto" style={{ backgroundColor: '#B2D0E0' }}>
+                <svg width="32" height="32" viewBox="0 0 32 32" className="text-white">
+                  <rect x="4" y="8" width="24" height="18" rx="4" fill="currentColor" opacity="0.9"/>
+                  <rect x="6" y="10" width="20" height="14" rx="2" fill="#B2D0E0"/>
+                  <circle cx="16" cy="17" r="4" fill="currentColor" opacity="0.8"/>
+                  <circle cx="16" cy="17" r="2.5" fill="#B2D0E0"/>
+                  <rect x="20" y="6" width="4" height="3" rx="1" fill="currentColor" opacity="0.9"/>
+                  <circle cx="22" cy="12" r="1" fill="currentColor" opacity="0.7"/>
+                </svg>
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">1. Photographiez</h3>
               <p className="text-sm text-gray-600">une photo du doudou, seule si possible</p>
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="w-12 h-12 bg-warm-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <Star className="w-6 h-6 text-warm-600" />
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 mx-auto" style={{ backgroundColor: '#B2D0E0' }}>
+                <svg width="32" height="32" viewBox="0 0 32 32" className="text-white">
+                  <path d="M8 6 C6 6 4 8 4 10 L4 22 C4 24 6 26 8 26 L24 26 C26 26 28 24 28 22 L28 10 C28 8 26 6 24 6 Z" fill="currentColor" opacity="0.9"/>
+                  <path d="M7 9 L25 9 C26 9 26 10 26 10 L26 23 C26 24 25 24 25 24 L7 24 C6 24 6 23 6 23 L6 10 C6 9 7 9 7 9 Z" fill="#B2D0E0"/>
+                  <circle cx="12" cy="15" r="2" fill="currentColor" opacity="0.8"/>
+                  <path d="M18 12 L24 12 M18 16 L22 16 M18 20 L24 20" stroke="currentColor" strokeWidth="1.5" opacity="0.7" strokeLinecap="round"/>
+                  <path d="M8 4 C7 4 7 5 7 5 L7 7 C7 8 8 8 8 8 L10 8 C11 8 11 7 11 7 L11 5 C11 4 10 4 10 4 Z" fill="currentColor" opacity="0.6"/>
+                </svg>
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">2. Personnalisez</h3>
               <p className="text-sm text-gray-600">Ajoutez le nom et quelques détails</p>
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <Gift className="w-6 h-6 text-primary-600" />
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 mx-auto" style={{ backgroundColor: '#B2D0E0' }}>
+                <svg width="32" height="32" viewBox="0 0 32 32" className="text-white">
+                  <rect x="6" y="12" width="20" height="14" rx="3" fill="currentColor" opacity="0.9"/>
+                  <rect x="8" y="14" width="16" height="10" rx="2" fill="#B2D0E0"/>
+                  <path d="M14 6 L18 6 C19 6 20 7 20 8 L20 12 L12 12 L12 8 C12 7 13 6 14 6 Z" fill="currentColor" opacity="0.8"/>
+                  <circle cx="16" cy="19" r="3" fill="currentColor" opacity="0.7"/>
+                  <path d="M13 7 L19 7" stroke="#B2D0E0" strokeWidth="1" strokeLinecap="round"/>
+                  <path d="M10 4 L22 4" stroke="currentColor" strokeWidth="2" opacity="0.6" strokeLinecap="round"/>
+                  <path d="M16 17 L16 21" stroke="#B2D0E0" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">3. Recevez</h3>
               <p className="text-sm text-gray-600">Des stickers uniques arrivent chez vous</p>
