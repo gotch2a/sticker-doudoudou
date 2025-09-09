@@ -5,10 +5,263 @@ import {
   Heart,
   Star,
   Gift,
-  ArrowRight
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+
+// 📊 Données des transformations doudous → stickers
+const beforeAfterData = [
+  {
+    id: 1,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg", // En attendant les vraies images
+    childName: "Emma",
+    doudouName: "Lapinou",
+    description: "Peluche lapin rose → 12 stickers adorables"
+  },
+  {
+    id: 2,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg",
+    childName: "Lucas",
+    doudouName: "Nounours",
+    description: "Ours en peluche brun → Planche de stickers personnalisés"
+  },
+  {
+    id: 3,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg",
+    childName: "Léa",
+    doudouName: "Chat Mimi",
+    description: "Peluche chat blanc → Collection de stickers mignons"
+  },
+  {
+    id: 4,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg",
+    childName: "Tom",
+    doudouName: "Dragon",
+    description: "Dragon vert → Stickers aventuriers"
+  },
+  {
+    id: 5,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg",
+    childName: "Chloé",
+    doudouName: "Licorne",
+    description: "Licorne rose → Stickers magiques"
+  },
+  {
+    id: 6,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg",
+    childName: "Hugo",
+    doudouName: "Éléphant",
+    description: "Éléphant gris → Stickers rigolos"
+  },
+  {
+    id: 7,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg",
+    childName: "Zoé",
+    doudouName: "Poupée Alice",
+    description: "Poupée aux cheveux bouclés → Stickers précieux"
+  },
+  {
+    id: 8,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg",
+    childName: "Nathan",
+    doudouName: "Dinosaure",
+    description: "T-Rex vert → Stickers préhistoriques"
+  },
+  {
+    id: 9,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg",
+    childName: "Manon",
+    doudouName: "Pingouin",
+    description: "Pingouin noir et blanc → Stickers polaires"
+  },
+  {
+    id: 10,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg",
+    childName: "Théo",
+    doudouName: "Singe Coco",
+    description: "Singe marron → Stickers espiègles"
+  },
+  {
+    id: 11,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg",
+    childName: "Lina",
+    doudouName: "Flamant Rose",
+    description: "Flamant tropical → Stickers colorés"
+  },
+  {
+    id: 12,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg",
+    childName: "Maxime",
+    doudouName: "Robot",
+    description: "Robot argenté → Stickers futuristes"
+  },
+  {
+    id: 13,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg",
+    childName: "Lily",
+    doudouName: "Grenouille",
+    description: "Grenouille verte → Stickers amusants"
+  },
+  {
+    id: 14,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg",
+    childName: "Ethan",
+    doudouName: "Voiture Rouge",
+    description: "Petite voiture → Stickers de course"
+  },
+  {
+    id: 15,
+    beforeImage: "/images/placeholder-doudou.svg",
+    afterImage: "/images/placeholder-doudou.svg",
+    childName: "Maya",
+    doudouName: "Chouette",
+    description: "Chouette dorée → Stickers nocturnes"
+  }
+]
+
+// 🎠 Composant Carousel
+function DoudouCarousel() {
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const totalSlides = beforeAfterData.length
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % totalSlides)
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides)
+  }
+
+  return (
+    <div className="relative">
+      {/* Carousel principal */}
+      <div className="overflow-hidden rounded-2xl bg-gradient-to-r from-primary-50 to-sage-50 p-8">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide}
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -100 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col md:flex-row items-center gap-8"
+          >
+            {/* AVANT */}
+            <div className="flex-1 text-center">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                📸 Photo envoyée
+              </h3>
+              <div className="bg-white rounded-xl p-6 shadow-lg">
+                <div className="w-48 h-48 mx-auto mb-4 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Image
+                    src={beforeAfterData[currentSlide].beforeImage}
+                    alt={`Doudou ${beforeAfterData[currentSlide].doudouName}`}
+                    width={150}
+                    height={150}
+                    className="object-contain opacity-50"
+                  />
+                </div>
+                <p className="text-sm text-gray-600">
+                  <strong>{beforeAfterData[currentSlide].childName}</strong> et son doudou <strong>{beforeAfterData[currentSlide].doudouName}</strong>
+                </p>
+              </div>
+            </div>
+
+            {/* Flèche magique */}
+            <div className="flex items-center justify-center">
+              <div className="bg-primary-500 rounded-full p-4 shadow-lg">
+                <ArrowRight className="w-8 h-8 text-white" />
+              </div>
+            </div>
+
+            {/* APRÈS */}
+            <div className="flex-1 text-center">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                ✨ Résultat TAGADOU
+              </h3>
+              <div className="bg-white rounded-xl p-6 shadow-lg">
+                <div className="w-48 h-48 mx-auto mb-4 bg-gradient-to-br from-warm-100 to-primary-100 rounded-lg flex items-center justify-center">
+                  <div className="grid grid-cols-3 gap-2 p-4">
+                    {[...Array(9)].map((_, i) => (
+                      <div key={i} className="w-12 h-12 bg-primary-200 rounded-lg flex items-center justify-center">
+                        <span className="text-xs">🏷️</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-sm text-primary-700 font-medium">
+                  {beforeAfterData[currentSlide].description}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Navigation */}
+      <div className="flex items-center justify-center mt-6 gap-4">
+        {/* Bouton précédent */}
+        <button
+          onClick={prevSlide}
+          className="p-2 bg-primary-100 hover:bg-primary-200 rounded-full transition-colors"
+          aria-label="Exemple précédent"
+        >
+          <ChevronLeft className="w-5 h-5 text-primary-600" />
+        </button>
+
+        {/* Indicateurs */}
+        <div className="flex gap-2">
+          {beforeAfterData.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-3 h-3 rounded-full transition-colors ${
+                index === currentSlide 
+                  ? 'bg-primary-500' 
+                  : 'bg-primary-200 hover:bg-primary-300'
+              }`}
+              aria-label={`Voir exemple ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Bouton suivant */}
+        <button
+          onClick={nextSlide}
+          className="p-2 bg-primary-100 hover:bg-primary-200 rounded-full transition-colors"
+          aria-label="Exemple suivant"
+        >
+          <ChevronRight className="w-5 h-5 text-primary-600" />
+        </button>
+      </div>
+
+      {/* Compteur */}
+      <div className="text-center mt-4">
+        <p className="text-sm text-gray-500">
+          {currentSlide + 1} / {totalSlides} transformations
+        </p>
+      </div>
+    </div>
+  )
+}
 
 export default function Home() {
   return (
@@ -85,6 +338,22 @@ export default function Home() {
               <p className="text-sm text-gray-600">Des stickers uniques arrivent chez vous</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Carousel Avant/Après */}
+      <section className="py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+              🎨 La magie TAGADOU en action
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Découvrez comment nous transformons les doudous préférés en adorables stickers
+            </p>
+          </div>
+          
+          <DoudouCarousel />
         </div>
       </section>
 
