@@ -266,9 +266,9 @@ export default function Home() {
       {/* Hero Section */}
       <section className="px-4 py-8 sm:py-16">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="mb-6 animate-fade-in">
+          <div className="mb-3 animate-fade-in">
             {/* Logo TAGADOU */}
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-2">
               <div className="w-96 h-96 sm:w-[32rem] sm:h-[32rem]">
                 <Image
                   src="/images/tagadou-logo.png"
@@ -307,48 +307,67 @@ export default function Home() {
           {/* Preview Cards */}
           <div className="grid sm:grid-cols-3 gap-6 max-w-3xl mx-auto animate-fade-in-slow">
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 mx-auto" style={{ backgroundColor: '#B2D0E0' }}>
-                <svg width="32" height="32" viewBox="0 0 32 32" className="text-white">
-                  <rect x="4" y="8" width="24" height="18" rx="4" fill="currentColor" opacity="0.9"/>
-                  <rect x="6" y="10" width="20" height="14" rx="2" fill="#B2D0E0"/>
-                  <circle cx="16" cy="17" r="4" fill="currentColor" opacity="0.8"/>
-                  <circle cx="16" cy="17" r="2.5" fill="#B2D0E0"/>
-                  <rect x="20" y="6" width="4" height="3" rx="1" fill="currentColor" opacity="0.9"/>
-                  <circle cx="22" cy="12" r="1" fill="currentColor" opacity="0.7"/>
+              <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6 mx-auto shadow-lg" style={{ backgroundColor: '#B2D0E0' }}>
+                <svg width="48" height="48" viewBox="0 0 48 48" className="text-white">
+                  {/* Caméra enfantine avec gros objectif */}
+                  <rect x="8" y="16" width="32" height="24" rx="6" fill="currentColor" strokeWidth="3" stroke="#ffffff"/>
+                  <circle cx="24" cy="28" r="8" fill="#ffffff" strokeWidth="4" stroke="currentColor"/>
+                  <circle cx="24" cy="28" r="5" fill="currentColor"/>
+                  <rect x="28" y="10" width="6" height="6" rx="3" fill="currentColor"/>
+                  <circle cx="36" cy="20" r="2" fill="#ffffff"/>
+                  <path d="M16 8 L20 8 C22 8 24 10 24 12 L24 16 L12 16 L12 12 C12 10 14 8 16 8 Z" fill="currentColor"/>
+                  {/* Petits détails mignons */}
+                  <circle cx="20" cy="32" r="1.5" fill="#B2D0E0"/>
+                  <circle cx="28" cy="32" r="1.5" fill="#B2D0E0"/>
                 </svg>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">1. Photographiez</h3>
-              <p className="text-sm text-gray-600">une photo du doudou, seule si possible</p>
+              <h3 className="font-bold text-gray-900 mb-2 text-lg">1. Photographiez</h3>
+              <p className="text-gray-600 font-medium">une photo du doudou, seule si possible</p>
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 mx-auto" style={{ backgroundColor: '#B2D0E0' }}>
-                <svg width="32" height="32" viewBox="0 0 32 32" className="text-white">
-                  <path d="M8 6 C6 6 4 8 4 10 L4 22 C4 24 6 26 8 26 L24 26 C26 26 28 24 28 22 L28 10 C28 8 26 6 24 6 Z" fill="currentColor" opacity="0.9"/>
-                  <path d="M7 9 L25 9 C26 9 26 10 26 10 L26 23 C26 24 25 24 25 24 L7 24 C6 24 6 23 6 23 L6 10 C6 9 7 9 7 9 Z" fill="#B2D0E0"/>
-                  <circle cx="12" cy="15" r="2" fill="currentColor" opacity="0.8"/>
-                  <path d="M18 12 L24 12 M18 16 L22 16 M18 20 L24 20" stroke="currentColor" strokeWidth="1.5" opacity="0.7" strokeLinecap="round"/>
-                  <path d="M8 4 C7 4 7 5 7 5 L7 7 C7 8 8 8 8 8 L10 8 C11 8 11 7 11 7 L11 5 C11 4 10 4 10 4 Z" fill="currentColor" opacity="0.6"/>
+              <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6 mx-auto shadow-lg" style={{ backgroundColor: '#B2D0E0' }}>
+                <svg width="48" height="48" viewBox="0 0 48 48" className="text-white">
+                  {/* Formulaire enfantin avec cœur */}
+                  <rect x="8" y="10" width="32" height="30" rx="4" fill="currentColor" strokeWidth="3" stroke="#ffffff"/>
+                  <rect x="12" y="14" width="24" height="22" rx="2" fill="#ffffff"/>
+                  {/* Visage souriant */}
+                  <circle cx="18" cy="22" r="6" fill="currentColor"/>
+                  <circle cx="16" cy="20" r="1.5" fill="#ffffff"/>
+                  <circle cx="20" cy="20" r="1.5" fill="#ffffff"/>
+                  <path d="M14 24 Q18 28 22 24" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" fill="none"/>
+                  {/* Lignes de texte mignonnes */}
+                  <rect x="26" y="18" width="8" height="2" rx="1" fill="currentColor"/>
+                  <rect x="26" y="22" width="6" height="2" rx="1" fill="currentColor"/>
+                  <rect x="26" y="26" width="8" height="2" rx="1" fill="currentColor"/>
+                  {/* Petit cœur */}
+                  <path d="M30 32 C29 31 28 31 28 32 C28 31 27 31 26 32 C27 33 30 36 30 36 C30 36 33 33 34 32 C33 31 32 31 32 32 C32 31 31 31 30 32 Z" fill="#ff6b9d"/>
                 </svg>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">2. Personnalisez</h3>
-              <p className="text-sm text-gray-600">Ajoutez le nom et quelques détails</p>
+              <h3 className="font-bold text-gray-900 mb-2 text-lg">2. Personnalisez</h3>
+              <p className="text-gray-600 font-medium">Ajoutez le nom et quelques détails</p>
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 mx-auto" style={{ backgroundColor: '#B2D0E0' }}>
-                <svg width="32" height="32" viewBox="0 0 32 32" className="text-white">
-                  <rect x="6" y="12" width="20" height="14" rx="3" fill="currentColor" opacity="0.9"/>
-                  <rect x="8" y="14" width="16" height="10" rx="2" fill="#B2D0E0"/>
-                  <path d="M14 6 L18 6 C19 6 20 7 20 8 L20 12 L12 12 L12 8 C12 7 13 6 14 6 Z" fill="currentColor" opacity="0.8"/>
-                  <circle cx="16" cy="19" r="3" fill="currentColor" opacity="0.7"/>
-                  <path d="M13 7 L19 7" stroke="#B2D0E0" strokeWidth="1" strokeLinecap="round"/>
-                  <path d="M10 4 L22 4" stroke="currentColor" strokeWidth="2" opacity="0.6" strokeLinecap="round"/>
-                  <path d="M16 17 L16 21" stroke="#B2D0E0" strokeWidth="1.5" strokeLinecap="round"/>
+              <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6 mx-auto shadow-lg" style={{ backgroundColor: '#B2D0E0' }}>
+                <svg width="48" height="48" viewBox="0 0 48 48" className="text-white">
+                  {/* Boîte cadeau enfantine */}
+                  <rect x="10" y="20" width="28" height="20" rx="4" fill="currentColor" strokeWidth="3" stroke="#ffffff"/>
+                  <rect x="14" y="24" width="20" height="12" rx="2" fill="#ffffff"/>
+                  {/* Ruban mignon */}
+                  <rect x="22" y="8" width="4" height="32" fill="#ff6b9d"/>
+                  <rect x="8" y="18" width="32" height="4" fill="#ff6b9d"/>
+                  {/* Nœud adorable */}
+                  <ellipse cx="24" cy="14" rx="6" ry="3" fill="#ff6b9d"/>
+                  <ellipse cx="20" cy="12" rx="3" ry="2" fill="#ffb3d1"/>
+                  <ellipse cx="28" cy="12" rx="3" ry="2" fill="#ffb3d1"/>
+                  {/* Petites étoiles magiques */}
+                  <path d="M16 30 L17 32 L19 31 L17.5 33 L19 35 L17 34 L16 36 L15 34 L13 35 L14.5 33 L13 31 L15 32 Z" fill="#ffd700"/>
+                  <path d="M30 28 L31 29 L32 28 L31.5 30 L32 31 L31 30.5 L30 32 L29 30.5 L28 31 L28.5 30 L28 28 L29 29 Z" fill="#ffd700"/>
                 </svg>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">3. Recevez</h3>
-              <p className="text-sm text-gray-600">Des stickers uniques arrivent chez vous</p>
+              <h3 className="font-bold text-gray-900 mb-2 text-lg">3. Recevez</h3>
+              <p className="text-gray-600 font-medium">Des stickers uniques arrivent chez vous</p>
             </div>
           </div>
         </div>
