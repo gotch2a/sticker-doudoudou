@@ -351,19 +351,31 @@ export default function Home() {
             <div className="bg-white rounded-2xl p-6 shadow-lg">
               <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6 mx-auto shadow-lg" style={{ backgroundColor: '#B2D0E0' }}>
                 <svg width="48" height="48" viewBox="0 0 48 48" className="text-white">
-                  {/* Boîte cadeau enfantine */}
-                  <rect x="10" y="20" width="28" height="20" rx="4" fill="currentColor" strokeWidth="3" stroke="#ffffff"/>
-                  <rect x="14" y="24" width="20" height="12" rx="2" fill="#ffffff"/>
-                  {/* Ruban mignon */}
-                  <rect x="22" y="8" width="4" height="32" fill="#ff6b9d"/>
-                  <rect x="8" y="18" width="32" height="4" fill="#ff6b9d"/>
-                  {/* Nœud adorable */}
-                  <ellipse cx="24" cy="14" rx="6" ry="3" fill="#ff6b9d"/>
-                  <ellipse cx="20" cy="12" rx="3" ry="2" fill="#ffb3d1"/>
-                  <ellipse cx="28" cy="12" rx="3" ry="2" fill="#ffb3d1"/>
-                  {/* Petites étoiles magiques */}
-                  <path d="M16 30 L17 32 L19 31 L17.5 33 L19 35 L17 34 L16 36 L15 34 L13 35 L14.5 33 L13 31 L15 32 Z" fill="#ffd700"/>
-                  <path d="M30 28 L31 29 L32 28 L31.5 30 L32 31 L31 30.5 L30 32 L29 30.5 L28 31 L28.5 30 L28 28 L29 29 Z" fill="#ffd700"/>
+                  {/* 🚚 Camion de livraison enfantin inspiré de votre image */}
+                  {/* Carrosserie du camion */}
+                  <rect x="6" y="20" width="20" height="12" rx="3" fill="currentColor" strokeWidth="2" stroke="#ffffff"/>
+                  {/* Cabine du conducteur */}
+                  <rect x="26" y="22" width="12" height="10" rx="2" fill="currentColor" strokeWidth="2" stroke="#ffffff"/>
+                  
+                  {/* Cadeau sur le camion (inspiré de votre image) */}
+                  <rect x="8" y="12" width="12" height="10" rx="2" fill="#ff4444" strokeWidth="2" stroke="#ffffff"/>
+                  {/* Nœud du cadeau */}
+                  <ellipse cx="14" cy="10" rx="4" ry="2" fill="#ff4444"/>
+                  <rect x="12" y="8" width="4" height="6" fill="#ff4444"/>
+                  <rect x="10" y="12" width="8" height="2" fill="#ff4444"/>
+                  
+                  {/* Roues mignonnes */}
+                  <circle cx="12" cy="34" r="4" fill="#333333"/>
+                  <circle cx="12" cy="34" r="2" fill="#888888"/>
+                  <circle cx="32" cy="34" r="4" fill="#333333"/>
+                  <circle cx="32" cy="34" r="2" fill="#888888"/>
+                  
+                  {/* Phares et détails enfantins */}
+                  <circle cx="38" cy="26" r="1.5" fill="#ffffff"/>
+                  <rect x="28" y="24" width="2" height="6" rx="1" fill="#87CEEB"/>
+                  
+                  {/* Petites étoiles de livraison magique */}
+                  <path d="M22 16 L23 17 L24 16 L23.5 18 L24 19 L23 18.5 L22 20 L21 18.5 L20 19 L20.5 18 L20 16 L21 17 Z" fill="#ffd700"/>
                 </svg>
               </div>
               <h3 className="font-bold text-gray-900 mb-2 text-lg">3. Recevez</h3>
