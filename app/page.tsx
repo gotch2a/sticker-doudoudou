@@ -268,8 +268,8 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-3 animate-fade-in">
             {/* Logo TAGADOU */}
-            <div className="flex justify-center mb-2">
-              <div className="w-96 h-96 sm:w-[32rem] sm:h-[32rem]">
+            <div className="flex justify-center mb-2" style={{ paddingTop: '10px', paddingBottom: '10px' }}>
+              <div className="w-48 h-48 sm:w-64 sm:h-64">
                 <Image
                   src="/images/tagadou-logo.png"
                   alt="TAGADOU - Logo du petit cochon"

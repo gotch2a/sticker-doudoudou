@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: 'Transformez les doudous en souvenirs magiques avec Doudoudou',
   manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.svg',
+    icon: '/images/Tagadou_favicon.png',
     apple: '/icon-192x192.png',
   },
 }
