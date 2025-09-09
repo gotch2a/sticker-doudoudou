@@ -264,7 +264,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-primary-50 via-warm-50 to-sage-50">
       {/* Hero Section */}
-      <section className="px-4 py-8 sm:py-16">
+      <section className="px-4 py-4 sm:py-8">
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-3 animate-fade-in">
             {/* Logo TAGADOU */}
