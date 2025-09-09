@@ -18,24 +18,24 @@ export default function Header() {
   return (
     <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-28">
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-2"
           >
-            <div className="w-8 h-8">
+            <div className="w-24 h-24">
               <Image
-                src="/images/logo.svg"
-                alt="Doudoudou Logo"
-                width={32}
-                height={32}
-                className="w-full h-full"
+                src="/images/tagadou-logo.png"
+                alt="TAGADOU Logo"
+                width={96}
+                height={96}
+                className="w-full h-full object-contain"
               />
             </div>
-            <span className="text-xl font-bold text-gray-900">
-              Doudoudou
+            <span className="text-3xl font-bold text-primary-600">
+              TAGADOU
             </span>
           </motion.div>
 

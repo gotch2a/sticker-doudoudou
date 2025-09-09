@@ -8,6 +8,7 @@ import {
   ArrowRight
 } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Home() {
   return (
@@ -16,6 +17,19 @@ export default function Home() {
       <section className="px-4 py-8 sm:py-16">
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-8 animate-fade-in">
+            {/* Logo TAGADOU */}
+            <div className="flex justify-center mb-8">
+              <div className="w-96 h-96 sm:w-[32rem] sm:h-[32rem]">
+                <Image
+                  src="/images/tagadou-logo.png"
+                  alt="TAGADOU - Logo du petit cochon"
+                  width={512}
+                  height={512}
+                  className="w-full h-full object-contain drop-shadow-lg"
+                />
+              </div>
+            </div>
+            
             <div className="inline-flex items-center gap-2 bg-sage-100 text-sage-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
               <Heart className="w-4 h-4" />
               Pour les petits cœurs
@@ -137,7 +151,7 @@ export default function Home() {
       </section>
 
       {/* CTA Final */}
-      <section className="py-16 bg-gradient-to-r from-primary-600 to-sage-600">
+      <section className="py-16 bg-primary-500">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="animate-fade-in">
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">

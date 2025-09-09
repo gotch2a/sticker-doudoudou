@@ -4,40 +4,43 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* Couleurs personnalisées pour remplacer les anciennes */
+/* 🌈 NOUVELLE PALETTE JOYEUSE - Inspirée de votre écran ! */
 :root {
-  --primary-50: #f7f6f4;
-  --primary-100: #ede9e4;
-  --primary-200: #dbd2c9;
-  --primary-300: #c4b5a0;
-  --primary-400: #b5a082;
-  --primary-500: #a0956b;
-  --primary-600: #8b7355;
-  --primary-700: #735f47;
-  --primary-800: #5d4e37;
-  --primary-900: #4a3f2a;
+  /* 💖 Primary = Rose joyeux (basé sur FAADAD) */
+  --primary-50: #fef7f7;   /* Rose très clair */
+  --primary-100: #fce8e8;  /* Rose clair */
+  --primary-200: #fbd4d4;  /* Rose doux */
+  --primary-300: #faadad;  /* 👈 VOTRE COULEUR (Maths) */
+  --primary-400: #f87c7c;  /* Rose vif */
+  --primary-500: #f56565;  /* Rose principal */
+  --primary-600: #e53e3e;  /* Rose intense */
+  --primary-700: #c53030;  /* Rose foncé */
+  --primary-800: #9c2626;  /* Rose très foncé */
+  --primary-900: #742a2a;  /* Rose presque noir */
   
-  --sage-50: #f6f7f4;
-  --sage-100: #eef1ea;
-  --sage-200: #dde3d5;
-  --sage-300: #c5cfb8;
-  --sage-400: #a8b896;
-  --sage-500: #9caf88;
-  --sage-600: #7d9069;
-  --sage-700: #627254;
-  --sage-800: #4f5c44;
-  --sage-900: #424d39;
+  /* 🌿 Sage = Vert menthe joyeux (basé sur AAF1CB) */
+  --sage-50: #f0fdf9;    /* Vert très clair */
+  --sage-100: #d1fae5;   /* Vert clair */
+  --sage-200: #aaf1cb;   /* 👈 VOTRE COULEUR (Music) */
+  --sage-300: #7dd3ac;   /* Vert menthe */
+  --sage-400: #4ade80;   /* Vert vif */
+  --sage-500: #22c55e;   /* Vert principal */
+  --sage-600: #16a34a;   /* Vert intense */
+  --sage-700: #15803d;   /* Vert foncé */
+  --sage-800: #166534;   /* Vert très foncé */
+  --sage-900: #14532d;   /* Vert presque noir */
   
-  --warm-50: #faf9f7;
-  --warm-100: #f4f1ec;
-  --warm-200: #e8e0d6;
-  --warm-300: #d6c7b7;
-  --warm-400: #c2a991;
-  --warm-500: #b08968;
-  --warm-600: #9e7356;
-  --warm-700: #845f49;
-  --warm-800: #6b4e3d;
-  --warm-900: #574133;
+  /* ☀️ Warm = Jaune soleil joyeux (basé sur FFE99D) */
+  --warm-50: #fffbeb;    /* Jaune très clair */
+  --warm-100: #fef3c7;   /* Jaune clair */
+  --warm-200: #ffe99d;   /* 👈 VOTRE COULEUR (Painting) */
+  --warm-300: #fcd34d;   /* Jaune doux */
+  --warm-400: #fbbf24;   /* Jaune vif */
+  --warm-500: #f59e0b;   /* Jaune principal */
+  --warm-600: #d97706;   /* Jaune intense */
+  --warm-700: #b45309;   /* Jaune foncé */
+  --warm-800: #92400e;   /* Jaune très foncé */
+  --warm-900: #78350f;   /* Jaune presque noir */
 }
 
 /* Base styles simples */
