@@ -91,11 +91,23 @@ export default function PreCommandePage() {
   const animalType = searchParams.get('animalType') || 'animal'
   const childName = searchParams.get('childName') || 'votre enfant'
   const childAge = searchParams.get('childAge') || ''
+  const parentFirstName = searchParams.get('parentFirstName') || ''
+  const parentLastName = searchParams.get('parentLastName') || ''
   const email = searchParams.get('email') || ''
   const address = searchParams.get('address') || ''
   const city = searchParams.get('city') || ''
   const postalCode = searchParams.get('postalCode') || ''
   const notes = searchParams.get('notes') || ''
+  
+  // 🎯 CORRECTION: Récupérer les prix transmis depuis /commande  
+  const transmittedBasePrice = parseFloat(searchParams.get('basePrice') || '12.90')
+  const transmittedShippingPrice = parseFloat(searchParams.get('shippingPrice') || '3.50')
+  const transmittedTotalPrice = parseFloat(searchParams.get('totalPrice') || '16.40')
+  const transmittedHasDiscount = searchParams.get('hasDiscount') === 'true'
+  const transmittedDiscountAmount = parseFloat(searchParams.get('discountAmount') || '0')
+  const transmittedDiscountReason = searchParams.get('discountReason') || ''
+  const transmittedOriginalPrice = parseFloat(searchParams.get('originalPrice') || '0')
+  const transmittedSavingsAmount = parseFloat(searchParams.get('savingsAmount') || '0')
   const numberOfSheets = parseInt(searchParams.get('numberOfSheets') || '1')
   const photo = searchParams.get('photo') || ''
   
@@ -282,8 +294,8 @@ export default function PreCommandePage() {
 
 
 
-  // Prix de base
-  const [basePricePerSheet, setBasePricePerSheet] = useState(12.90)
+  // Prix de base (utiliser le prix transmis en premier lieu)
+  const [basePricePerSheet, setBasePricePerSheet] = useState(transmittedBasePrice)
   const basePrice = numberOfSheets * basePricePerSheet
   
   // Calcul du total avec upsells
@@ -296,8 +308,8 @@ export default function PreCommandePage() {
   
   // Calcul du total avec remise
   const subtotal = basePrice + upsellTotal + shippingCost
-  const discountAmount = appliedDiscount ? appliedDiscount.discountAmount : 0
-  const totalPrice = Math.max(0, subtotal - discountAmount)
+  const currentDiscountAmount = appliedDiscount ? appliedDiscount.discountAmount : 0
+  const finalTotalPrice = Math.max(0, subtotal - currentDiscountAmount)
 
   // Fonction pour valider le code de remise
   // DOCUMENTATION : Utilisation de useCallback pour éviter les re-créations de fonction
@@ -383,6 +395,8 @@ export default function PreCommandePage() {
         animalType,
         childName,
         childAge,
+        parentFirstName,
+        parentLastName,
         email,
         address,
         city,
@@ -391,7 +405,7 @@ export default function PreCommandePage() {
         numberOfSheets,
         photo,
         upsells: selectedProducts,
-        totalAmount: totalPrice,
+        totalAmount: finalTotalPrice,
         subtotal: subtotal,
         discountCode: appliedDiscount ? appliedDiscount.code : null,
         discountAmount: appliedDiscount ? appliedDiscount.discountAmount : 0
@@ -399,7 +413,7 @@ export default function PreCommandePage() {
 
       console.log('📝 Données envoyées à l\'API:', {
         ...orderData,
-        calculatedTotal: totalPrice,
+        calculatedTotal: finalTotalPrice,
         basePrice,
         upsellTotal,
         selectedProducts
@@ -790,7 +804,7 @@ export default function PreCommandePage() {
           {/* Total */}
           <div className="flex items-center justify-between py-4 text-xl font-bold border-t-2 border-gray-300 mt-4">
             <span className="text-gray-800">Total à payer :</span>
-            <span className="text-green-600 text-2xl">{totalPrice.toFixed(2)}€</span>
+            <span className="text-green-600 text-2xl">{finalTotalPrice.toFixed(2)}€</span>
           </div>
 
 
@@ -815,7 +829,7 @@ export default function PreCommandePage() {
             ) : (
               <div className="flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5" />
-                Payer {totalPrice.toFixed(2)}€
+                Payer {finalTotalPrice.toFixed(2)}€
                 <ArrowRight className="w-5 h-5" />
               </div>
             )}

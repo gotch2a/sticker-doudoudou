@@ -24,19 +24,30 @@ export default function AuthButton() {
 
   useEffect(() => {
     // Vérifier l'état d'authentification au chargement
-    if (typeof window !== 'undefined') {
-      const storedAuth = localStorage.getItem('isAuthenticated')
-      const storedUser = localStorage.getItem('user')
-      
-      if (storedAuth === 'true' && storedUser) {
-        try {
-          setUser(JSON.parse(storedUser))
-          setIsAuthenticated(true)
-        } catch (error) {
-          console.error('Erreur parsing user:', error)
-          handleLogout()
+    const checkAuthState = () => {
+      if (typeof window !== 'undefined') {
+        const storedAuth = localStorage.getItem('isAuthenticated')
+        const storedUser = localStorage.getItem('user')
+        
+        if (storedAuth === 'true' && storedUser) {
+          try {
+            setUser(JSON.parse(storedUser))
+            setIsAuthenticated(true)
+          } catch (error) {
+            console.error('Erreur parsing user:', error)
+            handleLogout()
+          }
         }
       }
+    }
+    
+    checkAuthState()
+    
+    // Écouter les changements du localStorage (connexion automatique)
+    window.addEventListener('storage', checkAuthState)
+    
+    return () => {
+      window.removeEventListener('storage', checkAuthState)
     }
   }, [])
 
@@ -79,10 +90,10 @@ export default function AuthButton() {
   return (
     <Link
       href="/auth/login"
-      className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+      className="flex items-center gap-1 text-gray-600 hover:text-red-500 transition-colors text-sm font-medium"
     >
       <User className="w-4 h-4" />
-      <span className="text-sm font-medium">Se connecter</span>
+      <span>Se connecter</span>
     </Link>
   )
 }

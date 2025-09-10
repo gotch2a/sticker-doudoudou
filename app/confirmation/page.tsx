@@ -67,9 +67,35 @@ export default function ConfirmationPage() {
       if (result.success) {
         setOrderDetails(result.order)
         setOrderDetailsLoaded(true)
+        
+        // Connecter automatiquement l'utilisateur après commande validée
+        await autoLoginAfterOrder(result.order)
       }
     } catch (error) {
       console.error('Erreur chargement détails commande:', error)
+    }
+  }
+
+  const autoLoginAfterOrder = async (order: any) => {
+    try {
+      console.log('🔐 Connexion automatique après commande...')
+      
+      // Récupérer les infos utilisateur depuis l'email de la commande
+      const response = await fetch(`/api/user/profile?email=${encodeURIComponent(order.client_email)}`)
+      const result = await response.json()
+      
+      if (result.success && result.user) {
+        // Connecter l'utilisateur localement
+        localStorage.setItem('isAuthenticated', 'true')
+        localStorage.setItem('user', JSON.stringify(result.user))
+        
+        console.log('✅ Utilisateur connecté automatiquement:', result.user.first_name)
+        
+        // Forcer le rafraîchissement de la navigation
+        window.dispatchEvent(new Event('storage'))
+      }
+    } catch (error) {
+      console.error('❌ Erreur connexion automatique:', error)
     }
   }
 

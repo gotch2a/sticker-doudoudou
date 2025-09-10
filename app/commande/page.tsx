@@ -23,6 +23,8 @@ interface FormData {
   animalType: string
   childName: string
   childAge: string
+  parentFirstName: string
+  parentLastName: string
   address: string
   city: string
   postalCode: string
@@ -49,6 +51,8 @@ export default function CommandePage() {
     animalType: '',
     childName: '',
     childAge: '',
+    parentFirstName: '',
+    parentLastName: '',
     address: '',
     city: '',
     postalCode: '',
@@ -57,6 +61,38 @@ export default function CommandePage() {
     email: '',
     consent: false
   })
+  
+  // Préremplir les données utilisateur si connecté
+  useEffect(() => {
+    const loadUserData = () => {
+      if (typeof window !== 'undefined') {
+        const isAuth = localStorage.getItem('isAuthenticated') === 'true'
+        const userStr = localStorage.getItem('user')
+        
+        if (isAuth && userStr) {
+          try {
+            const user = JSON.parse(userStr)
+            console.log('👤 Préremplissage données utilisateur:', user.first_name)
+            
+            setFormData(prev => ({
+              ...prev,
+              parentFirstName: user.first_name || prev.parentFirstName,
+              parentLastName: user.last_name || prev.parentLastName,
+              email: user.email || prev.email,
+              // 🎯 CORRECTION: Préremplir aussi l'adresse
+              address: user.address || prev.address,
+              city: user.city || prev.city,
+              postalCode: user.postalCode || prev.postalCode
+            }))
+          } catch (error) {
+            console.error('❌ Erreur préremplissage:', error)
+          }
+        }
+      }
+    }
+    
+    loadUserData()
+  }, [])
   
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
@@ -120,6 +156,8 @@ export default function CommandePage() {
     if (!formData.animalType.trim()) newErrors.animalType = 'Dites-nous ce que c\'est comme objet'
     if (!formData.childName.trim()) newErrors.childName = 'Le prénom de l\'enfant est requis'
     if (!formData.childAge) newErrors.childAge = 'L\'âge de l\'enfant est requis'
+    if (!formData.parentFirstName.trim()) newErrors.parentFirstName = 'Votre prénom est requis'
+    if (!formData.parentLastName.trim()) newErrors.parentLastName = 'Votre nom de famille est requis'
     if (!formData.address.trim()) newErrors.address = 'L\'adresse est requise'
     if (!formData.city.trim()) newErrors.city = 'La ville est requise'
     if (!formData.postalCode.trim()) newErrors.postalCode = 'Le code postal est requis'
@@ -162,19 +200,33 @@ export default function CommandePage() {
         }
       }
 
-      // Redirection vers page d'upsell avec les données du formulaire
+      // Redirection vers page d'upsell avec les données du formulaire et prix
       const params = new URLSearchParams({
         petName: formData.petName,
         animalType: formData.animalType,
         childName: formData.childName,
         childAge: formData.childAge,
+        parentFirstName: formData.parentFirstName,
+        parentLastName: formData.parentLastName,
         email: formData.email,
         address: formData.address,
         city: formData.city,
         postalCode: formData.postalCode,
         notes: formData.notes,
         numberOfSheets: formData.numberOfSheets.toString(),
-        ...(photoFileName && { photo: `/api/photos/${photoFileName}` })
+        // 🎯 CORRECTION: Passer les prix corrects à la page pré-commande
+        basePrice: (pricing ? pricing.priceBreakdown.basePrice : basePrice).toString(),
+        shippingPrice: (pricing ? pricing.priceBreakdown.shippingPrice : shippingCost).toString(),
+        totalPrice: totalPrice.toString(),
+        hasDiscount: hasDiscount.toString(),
+        ...(photoFileName && { photo: `/api/photos/${photoFileName}` }),
+        // Passer les informations de réduction si applicable
+        ...(pricing && hasDiscount && {
+          discountAmount: pricing.discount.amount.toString(),
+          discountReason: pricing.discount.reason,
+          originalPrice: pricing.originalPrice.toString(),
+          savingsAmount: pricing.savingsAmount.toString()
+        })
       })
       
       router.push(`/pre-commande?${params.toString()}`)
@@ -192,6 +244,27 @@ export default function CommandePage() {
   }
 
   const [pricePerSheet, setPricePerSheet] = useState(12.90)
+  
+  // 🎯 CORRECTION: Charger le prix dynamiquement depuis l'admin
+  useEffect(() => {
+    const loadBasePrice = async () => {
+      try {
+        const response = await fetch('/api/admin/products')
+        if (response.ok) {
+          const { articles } = await response.json()
+          const baseProduct = articles.find((p: any) => p.id === 'planche-base' || p.category === 'base')
+          if (baseProduct) {
+            setPricePerSheet(baseProduct.sale_price)
+            console.log('💰 Prix planche chargé depuis admin:', baseProduct.sale_price)
+          }
+        }
+      } catch (error) {
+        console.error('❌ Erreur chargement prix admin:', error)
+      }
+    }
+    
+    loadBasePrice()
+  }, [])
   const basePrice = 1 * pricePerSheet // Toujours 1 planche à cette étape
   
   // Prix intelligent ou prix standard
@@ -306,11 +379,13 @@ export default function CommandePage() {
               >
                 {photoPreview ? (
                   <div className="text-center">
-                    <img 
-                      src={photoPreview} 
-                      alt="Prévisualisation" 
-                      className="w-32 h-32 object-cover rounded-xl mx-auto mb-4"
-                    />
+                    <div className="w-48 h-48 mx-auto mb-4 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
+                      <img 
+                        src={photoPreview} 
+                        alt="Prévisualisation" 
+                        className="max-w-full max-h-full object-contain rounded-xl"
+                      />
+                    </div>
                     <div className="flex items-center justify-center gap-2 text-green-600">
                       <Check className="w-5 h-5" />
                       <span className="font-medium">Photo ajoutée !</span>
@@ -444,6 +519,53 @@ export default function CommandePage() {
               {errors.childAge && (
                 <span className="text-red-600 text-sm mt-1">{errors.childAge}</span>
               )}
+            </div>
+
+            {/* Informations du parent */}
+            <div className="border-t border-gray-200 pt-4 mt-6">
+              <h3 className="text-md font-medium text-gray-800 mb-4">👤 Vos informations</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Votre prénom *
+                  </label>
+                  <input
+                    type="text"
+                    name="parentFirstName"
+                    autoComplete="given-name"
+                    value={formData.parentFirstName}
+                    onChange={(e) => setFormData({ ...formData, parentFirstName: e.target.value })}
+                    placeholder="Votre prénom"
+                    className={`w-full px-4 py-3 rounded-xl border ${
+                      errors.parentFirstName ? 'border-red-300' : 'border-gray-300'
+                    } focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors`}
+                  />
+                  {errors.parentFirstName && (
+                    <span className="text-red-600 text-sm mt-1">{errors.parentFirstName}</span>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Votre nom de famille *
+                  </label>
+                  <input
+                    type="text"
+                    name="parentLastName"
+                    autoComplete="family-name"
+                    value={formData.parentLastName}
+                    onChange={(e) => setFormData({ ...formData, parentLastName: e.target.value })}
+                    placeholder="Votre nom"
+                    className={`w-full px-4 py-3 rounded-xl border ${
+                      errors.parentLastName ? 'border-red-300' : 'border-gray-300'
+                    } focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors`}
+                  />
+                  {errors.parentLastName && (
+                    <span className="text-red-600 text-sm mt-1">{errors.parentLastName}</span>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div>

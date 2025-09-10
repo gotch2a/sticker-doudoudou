@@ -3,6 +3,7 @@
 import { 
   Camera,
   ArrowRight,
+  ArrowDown,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react'
@@ -155,7 +156,7 @@ function DoudouCarousel() {
 
   // 🎯 Navigation au clavier avec les flèches
   useEffect(() => {
-    const handleKeyPress = (event) => {
+    const handleKeyPress = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'ArrowLeft':
           event.preventDefault()
@@ -211,10 +212,12 @@ function DoudouCarousel() {
               </div>
             </div>
 
-            {/* Flèche magique */}
+            {/* Flèche magique - responsive */}
             <div className="flex items-center justify-center">
               <div className="bg-primary-500 rounded-full p-4 shadow-lg">
-                <ArrowRight className="w-8 h-8 text-white" />
+                {/* 🎯 CORRECTION: Flèche vers le bas sur mobile, à droite sur desktop */}
+                <ArrowDown className="w-8 h-8 text-white md:hidden" />
+                <ArrowRight className="w-8 h-8 text-white hidden md:block" />
               </div>
             </div>
 
@@ -317,14 +320,13 @@ export default function Home() {
               </div>
             </div>
             
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Transformez le doudou
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight" style={{color: '#353535'}}>
               <span className="text-primary-600 block">
-                en planches stickers !
+                Mon doudou à coller partout
               </span>
             </h1>
             
-            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+            <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-8" style={{color: '#353535'}}>
               <strong>Donnez la photo du doudou, on s'occupe du reste.</strong><br/>
               Notre artiste crée des stickers uniques pour votre enfant.
             </p>
@@ -344,42 +346,28 @@ export default function Home() {
           {/* Preview Cards */}
           <div className="grid sm:grid-cols-3 gap-6 max-w-3xl mx-auto animate-fade-in-slow">
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6 mx-auto shadow-lg" style={{ backgroundColor: '#B2D0E0' }}>
-                <svg width="48" height="48" viewBox="0 0 48 48" className="text-white">
-                  {/* Caméra enfantine avec gros objectif */}
-                  <rect x="8" y="16" width="32" height="24" rx="6" fill="currentColor" strokeWidth="3" stroke="#ffffff"/>
-                  <circle cx="24" cy="28" r="8" fill="#ffffff" strokeWidth="4" stroke="currentColor"/>
-                  <circle cx="24" cy="28" r="5" fill="currentColor"/>
-                  <rect x="28" y="10" width="6" height="6" rx="3" fill="currentColor"/>
-                  <circle cx="36" cy="20" r="2" fill="#ffffff"/>
-                  <path d="M16 8 L20 8 C22 8 24 10 24 12 L24 16 L12 16 L12 12 C12 10 14 8 16 8 Z" fill="currentColor"/>
-                  {/* Petits détails mignons */}
-                  <circle cx="20" cy="32" r="1.5" fill="#B2D0E0"/>
-                  <circle cx="28" cy="32" r="1.5" fill="#B2D0E0"/>
-                </svg>
+              <div className="w-24 h-24 flex items-center justify-center mb-6 mx-auto">
+                <Image
+                  src="/images/icon_photo.png"
+                  alt="Icône photo"
+                  width={75}
+                  height={75}
+                  className="object-contain"
+                />
               </div>
               <h3 className="font-bold text-gray-900 mb-2 text-lg">1. Photographiez</h3>
               <p className="text-gray-600 font-medium">une photo du doudou, seule si possible</p>
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6 mx-auto shadow-lg" style={{ backgroundColor: '#B2D0E0' }}>
-                <svg width="48" height="48" viewBox="0 0 48 48" className="text-white">
-                  {/* Formulaire enfantin avec cœur */}
-                  <rect x="8" y="10" width="32" height="30" rx="4" fill="currentColor" strokeWidth="3" stroke="#ffffff"/>
-                  <rect x="12" y="14" width="24" height="22" rx="2" fill="#ffffff"/>
-                  {/* Visage souriant */}
-                  <circle cx="18" cy="22" r="6" fill="currentColor"/>
-                  <circle cx="16" cy="20" r="1.5" fill="#ffffff"/>
-                  <circle cx="20" cy="20" r="1.5" fill="#ffffff"/>
-                  <path d="M14 24 Q18 28 22 24" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" fill="none"/>
-                  {/* Lignes de texte mignonnes */}
-                  <rect x="26" y="18" width="8" height="2" rx="1" fill="currentColor"/>
-                  <rect x="26" y="22" width="6" height="2" rx="1" fill="currentColor"/>
-                  <rect x="26" y="26" width="8" height="2" rx="1" fill="currentColor"/>
-                  {/* Petit cœur */}
-                  <path d="M30 32 C29 31 28 31 28 32 C28 31 27 31 26 32 C27 33 30 36 30 36 C30 36 33 33 34 32 C33 31 32 31 32 32 C32 31 31 31 30 32 Z" fill="#ff6b9d"/>
-                </svg>
+              <div className="w-24 h-24 flex items-center justify-center mb-6 mx-auto">
+                <Image
+                  src="/images/icon_personnaliser.png"
+                  alt="Icône personnaliser"
+                  width={75}
+                  height={75}
+                  className="object-contain"
+                />
               </div>
               <h3 className="font-bold text-gray-900 mb-2 text-lg">2. Personnalisez</h3>
               <p className="text-gray-600 font-medium">Ajoutez le nom et quelques détails</p>
@@ -494,8 +482,8 @@ export default function Home() {
               href="/commande" 
               className="inline-flex items-center gap-3 bg-white text-primary-600 px-8 py-4 rounded-full text-lg font-medium hover:bg-gray-50 transition-colors shadow-lg"
             >
-              <Camera className="w-5 h-5" />
-              Commencer maintenant
+              <span className="text-2xl">🪄</span>
+              Abracadabra !
             </Link>
           </div>
         </div>

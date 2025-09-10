@@ -39,6 +39,8 @@ interface OrderData {
   animalType: string
   childName: string
   childAge?: string
+  parentFirstName?: string
+  parentLastName?: string
   address?: string
   city?: string
   postalCode?: string
@@ -62,6 +64,8 @@ export async function POST(request: NextRequest) {
       petName: orderData.petName,
       animalType: orderData.animalType,
       childName: orderData.childName,
+      parentFirstName: orderData.parentFirstName,
+      parentLastName: orderData.parentLastName,
       email: orderData.email,
       numberOfSheets: orderData.numberOfSheets,
       upsells: orderData.upsells,
@@ -169,8 +173,21 @@ export async function POST(request: NextRequest) {
     
     console.log('🔐 Début processus création compte automatique...')
     
-    // Extraire prénom et nom depuis childName (optionnel)
-    const { firstName, lastName } = AuthUtils.parseFullName(orderData.childName)
+    // Utiliser les vrais données parent ou fallback sur nom enfant
+    let firstName = orderData.parentFirstName?.trim() || ''
+    let lastName = orderData.parentLastName?.trim() || ''
+    
+    // Fallback : si pas de nom parent, extraire depuis email ou nom enfant
+    if (!firstName && !lastName) {
+      if (orderData.email) {
+        firstName = orderData.email.split('@')[0] // Prénom depuis email
+      } else {
+        // Dernier recours : utiliser nom enfant
+        const parsed = AuthUtils.parseFullName(orderData.childName)
+        firstName = parsed.firstName
+        lastName = parsed.lastName
+      }
+    }
     
     // Préparer les données utilisateur
     const userData = {

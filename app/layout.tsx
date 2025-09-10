@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import Navigation from '@/components/Navigation'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -32,6 +33,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#8b7355" />
       </head>
       <body className={`${inter.className} antialiased`}>
+        <Navigation />
         <div className="min-h-screen bg-gradient-to-br from-primary-50 to-sage-50">
           {children}
         </div>
