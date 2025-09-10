@@ -8,145 +8,174 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-// 📊 Données des transformations doudous → stickers
+// 📊 Données des transformations doudous → stickers avec système de nommage
+// 📁 Photos AVANT : "Photos de doudous/1_Prenom.jpg" 
+// 🎨 Illustrations APRÈS : "Illustrations de doudous/2_Prenom.jpg"
 const beforeAfterData = [
   {
     id: 1,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg", // En attendant les vraies images
-    childName: "Emma",
-    doudouName: "Lapinou",
-    description: "Peluche lapin rose → 12 stickers adorables"
+    beforeImage: "/images/Photos de doudous/1_Ariel.jpg",
+    afterImage: "/images/Illustrations de doudous/2_Ariel.PNG",
+    childName: "Ariel",
+    doudouName: "Doudou magique",
+    description: "Transformation magique → Stickers personnalisés"
   },
   {
     id: 2,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg",
-    childName: "Lucas",
-    doudouName: "Nounours",
-    description: "Ours en peluche brun → Planche de stickers personnalisés"
+    beforeImage: "/images/Photos de doudous/1_Brune.jpg",
+    afterImage: "/images/Illustrations de doudous/2_Brune.PNG",
+    childName: "Brune",
+    doudouName: "Compagnon fidèle",
+    description: "Doudou adoré → Planche de stickers uniques"
   },
   {
     id: 3,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg",
-    childName: "Léa",
-    doudouName: "Chat Mimi",
-    description: "Peluche chat blanc → Collection de stickers mignons"
+    beforeImage: "/images/Photos de doudous/1_Camila.jpg",
+    afterImage: "/images/Illustrations de doudous/2_Camila.PNG",
+    childName: "Camila",
+    doudouName: "Petit trésor",
+    description: "Doudou précieux → Collection de stickers"
   },
   {
     id: 4,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg",
-    childName: "Tom",
-    doudouName: "Dragon",
-    description: "Dragon vert → Stickers aventuriers"
+    beforeImage: "/images/Photos de doudous/1_Côme-lapin.jpeg",
+    afterImage: "/images/Illustrations de doudous/2_Côme.PNG",
+    childName: "Côme",
+    doudouName: "Lapin",
+    description: "Lapin tout doux → Stickers à croquer"
   },
   {
     id: 5,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg",
-    childName: "Chloé",
-    doudouName: "Licorne",
-    description: "Licorne rose → Stickers magiques"
+    beforeImage: "/images/Photos de doudous/1_Dario.JPG",
+    afterImage: "/images/Illustrations de doudous/2_Dario.PNG",
+    childName: "Dario",
+    doudouName: "Compagnon d'aventures",
+    description: "Doudou d'aventurier → Stickers palpitants"
   },
   {
     id: 6,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg",
-    childName: "Hugo",
-    doudouName: "Éléphant",
-    description: "Éléphant gris → Stickers rigolos"
+    beforeImage: "/images/Photos de doudous/1_Gianni.jpg",
+    afterImage: "/images/Illustrations de doudous/2_Gianni.PNG",
+    childName: "Gianni",
+    doudouName: "Meilleur ami",
+    description: "Doudou complice → Stickers fantastiques"
   },
   {
     id: 7,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg",
-    childName: "Zoé",
-    doudouName: "Poupée Alice",
-    description: "Poupée aux cheveux bouclés → Stickers précieux"
+    beforeImage: "/images/Photos de doudous/1_Hugo_Yack.jpeg",
+    afterImage: "/images/Illustrations de doudous/2_Hugo.PNG",
+    childName: "Hugo",
+    doudouName: "Yack",
+    description: "Yack rigolo → Stickers amusants"
   },
   {
     id: 8,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg",
-    childName: "Nathan",
-    doudouName: "Dinosaure",
-    description: "T-Rex vert → Stickers préhistoriques"
+    beforeImage: "/images/Photos de doudous/1_Jacques-Souris.jpg",
+    afterImage: "/images/Illustrations de doudous/2_Jacques.PNG",
+    childName: "Jacques",
+    doudouName: "Souris",
+    description: "Petite souris → Stickers malicieux"
   },
   {
     id: 9,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg",
-    childName: "Manon",
-    doudouName: "Pingouin",
-    description: "Pingouin noir et blanc → Stickers polaires"
+    beforeImage: "/images/Photos de doudous/1_Lou-Poulpe.jpg",
+    afterImage: "/images/Illustrations de doudous/2_Lou.PNG",
+    childName: "Lou",
+    doudouName: "Poulpe",
+    description: "Poulpe des mers → Stickers aquatiques"
   },
   {
     id: 10,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg",
-    childName: "Théo",
-    doudouName: "Singe Coco",
-    description: "Singe marron → Stickers espiègles"
+    beforeImage: "/images/Photos de doudous/1_Louison-radis.jpg",
+    afterImage: "/images/Illustrations de doudous/2_Louison.PNG",
+    childName: "Louison",
+    doudouName: "Radis",
+    description: "Radis croquant → Stickers vitaminés"
   },
   {
     id: 11,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg",
-    childName: "Lina",
-    doudouName: "Flamant Rose",
-    description: "Flamant tropical → Stickers colorés"
+    beforeImage: "/images/Photos de doudous/1_Michka-renard.jpg",
+    afterImage: "/images/Illustrations de doudous/2_Michka.PNG",
+    childName: "Michka",
+    doudouName: "Renard",
+    description: "Renard malin → Stickers rusés"
   },
   {
     id: 12,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg",
-    childName: "Maxime",
-    doudouName: "Robot",
-    description: "Robot argenté → Stickers futuristes"
+    beforeImage: "/images/Photos de doudous/1_Octave-Pingui.jpg",
+    afterImage: "/images/Illustrations de doudous/2_Octave.PNG",
+    childName: "Octave",
+    doudouName: "Pingouin",
+    description: "Pingouin élégant → Stickers polaires"
   },
   {
     id: 13,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg",
-    childName: "Lily",
-    doudouName: "Grenouille",
-    description: "Grenouille verte → Stickers amusants"
+    beforeImage: "/images/Photos de doudous/1_Sam.png",
+    afterImage: "/images/Illustrations de doudous/2_Sam.PNG",
+    childName: "Sam",
+    doudouName: "Fidèle compagnon",
+    description: "Compagnon loyal → Stickers attachants"
   },
   {
     id: 14,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg",
-    childName: "Ethan",
-    doudouName: "Voiture Rouge",
-    description: "Petite voiture → Stickers de course"
+    beforeImage: "/images/Photos de doudous/1_Samuel-vache.jpg",
+    afterImage: "/images/Illustrations de doudous/2_Samuel.PNG",
+    childName: "Samuel",
+    doudouName: "Vache",
+    description: "Vache rigolote → Stickers de la ferme"
   },
   {
     id: 15,
-    beforeImage: "/images/placeholder-doudou.svg",
-    afterImage: "/images/placeholder-doudou.svg",
-    childName: "Maya",
-    doudouName: "Chouette",
-    description: "Chouette dorée → Stickers nocturnes"
+    beforeImage: "/images/Photos de doudous/1_Tali_jojo.jpg",
+    afterImage: "/images/Illustrations de doudous/2_Tali.PNG",
+    childName: "Tali",
+    doudouName: "Jojo",
+    description: "Jojo tout mignon → Stickers câlins"
   }
 ]
 
 // 🎠 Composant Carousel
 function DoudouCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [direction, setDirection] = useState(1) // 1 = droite, -1 = gauche
   const totalSlides = beforeAfterData.length
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
+    setDirection(1) // Animation vers la droite
     setCurrentSlide((prev) => (prev + 1) % totalSlides)
-  }
+  }, [totalSlides])
 
-  const prevSlide = () => {
+  const prevSlide = useCallback(() => {
+    setDirection(-1) // Animation vers la gauche
     setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides)
-  }
+  }, [totalSlides])
+
+  // 🎯 Navigation au clavier avec les flèches
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      switch (event.key) {
+        case 'ArrowLeft':
+          event.preventDefault()
+          prevSlide()
+          break
+        case 'ArrowRight':
+          event.preventDefault()
+          nextSlide()
+          break
+      }
+    }
+
+    // Ajouter l'event listener
+    window.addEventListener('keydown', handleKeyPress)
+
+    // Nettoyer l'event listener au démontage
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress)
+    }
+  }, [nextSlide, prevSlide]) // Fonctions stables grâce à useCallback
 
   return (
     <div className="relative">
@@ -155,29 +184,29 @@ function DoudouCarousel() {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
-            initial={{ opacity: 0, x: 100 }}
+            initial={{ opacity: 0, x: direction * 100 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
+            exit={{ opacity: 0, x: direction * -100 }}
             transition={{ duration: 0.5 }}
             className="flex flex-col md:flex-row items-center gap-8"
           >
             {/* AVANT */}
             <div className="flex-1 text-center">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">
                 📸 Photo envoyée
               </h3>
-              <div className="bg-white rounded-xl p-6 shadow-lg">
-                <div className="w-48 h-48 mx-auto mb-4 bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="bg-white rounded-xl p-6 shadow-lg w-80 h-80 mx-auto">
+                <div className="w-full h-48 mx-auto mb-4 flex items-center justify-center rounded-lg">
                   <Image
                     src={beforeAfterData[currentSlide].beforeImage}
                     alt={`Doudou ${beforeAfterData[currentSlide].doudouName}`}
-                    width={150}
-                    height={150}
-                    className="object-contain opacity-50"
+                    width={160}
+                    height={160}
+                    className="object-contain max-w-full max-h-full shadow-md rounded-lg"
                   />
                 </div>
                 <p className="text-sm text-gray-600">
-                  <strong>{beforeAfterData[currentSlide].childName}</strong> et son doudou <strong>{beforeAfterData[currentSlide].doudouName}</strong>
+                  {beforeAfterData[currentSlide].childName} et son doudou {beforeAfterData[currentSlide].doudouName}
                 </p>
               </div>
             </div>
@@ -191,20 +220,20 @@ function DoudouCarousel() {
 
             {/* APRÈS */}
             <div className="flex-1 text-center">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">
                 ✨ Résultat TAGADOU
               </h3>
-              <div className="bg-white rounded-xl p-6 shadow-lg">
-                <div className="w-48 h-48 mx-auto mb-4 bg-gradient-to-br from-warm-100 to-primary-100 rounded-lg flex items-center justify-center">
-                  <div className="grid grid-cols-3 gap-2 p-4">
-                    {[...Array(9)].map((_, i) => (
-                      <div key={i} className="w-12 h-12 bg-primary-200 rounded-lg flex items-center justify-center">
-                        <span className="text-xs">🏷️</span>
-                      </div>
-                    ))}
-                  </div>
+              <div className="bg-white rounded-xl p-6 shadow-lg w-80 h-80 mx-auto">
+                <div className="w-full h-48 mx-auto mb-4 flex items-center justify-center rounded-lg">
+                  <Image
+                    src={beforeAfterData[currentSlide].afterImage}
+                    alt={`Stickers ${beforeAfterData[currentSlide].doudouName}`}
+                    width={160}
+                    height={160}
+                    className="object-contain max-w-full max-h-full shadow-md rounded-lg"
+                  />
                 </div>
-                <p className="text-sm text-primary-700 font-medium">
+                <p className="text-sm text-gray-600">
                   {beforeAfterData[currentSlide].description}
                 </p>
               </div>
@@ -254,6 +283,14 @@ function DoudouCarousel() {
       <div className="text-center mt-4">
         <p className="text-sm text-gray-500">
           {currentSlide + 1} / {totalSlides} transformations
+        </p>
+        <p className="text-xs text-gray-400 mt-1 flex items-center justify-center gap-2">
+          <span>Utilisez les flèches</span>
+          <span className="inline-flex gap-1">
+            <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">←</kbd>
+            <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">→</kbd>
+          </span>
+          <span>pour naviguer</span>
         </p>
       </div>
     </div>
@@ -349,34 +386,14 @@ export default function Home() {
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6 mx-auto shadow-lg" style={{ backgroundColor: '#B2D0E0' }}>
-                <svg width="48" height="48" viewBox="0 0 48 48" className="text-white">
-                  {/* 🚚 Camion de livraison enfantin inspiré de votre image */}
-                  {/* Carrosserie du camion */}
-                  <rect x="6" y="20" width="20" height="12" rx="3" fill="currentColor" strokeWidth="2" stroke="#ffffff"/>
-                  {/* Cabine du conducteur */}
-                  <rect x="26" y="22" width="12" height="10" rx="2" fill="currentColor" strokeWidth="2" stroke="#ffffff"/>
-                  
-                  {/* Cadeau sur le camion (inspiré de votre image) */}
-                  <rect x="8" y="12" width="12" height="10" rx="2" fill="#ff4444" strokeWidth="2" stroke="#ffffff"/>
-                  {/* Nœud du cadeau */}
-                  <ellipse cx="14" cy="10" rx="4" ry="2" fill="#ff4444"/>
-                  <rect x="12" y="8" width="4" height="6" fill="#ff4444"/>
-                  <rect x="10" y="12" width="8" height="2" fill="#ff4444"/>
-                  
-                  {/* Roues mignonnes */}
-                  <circle cx="12" cy="34" r="4" fill="#333333"/>
-                  <circle cx="12" cy="34" r="2" fill="#888888"/>
-                  <circle cx="32" cy="34" r="4" fill="#333333"/>
-                  <circle cx="32" cy="34" r="2" fill="#888888"/>
-                  
-                  {/* Phares et détails enfantins */}
-                  <circle cx="38" cy="26" r="1.5" fill="#ffffff"/>
-                  <rect x="28" y="24" width="2" height="6" rx="1" fill="#87CEEB"/>
-                  
-                  {/* Petites étoiles de livraison magique */}
-                  <path d="M22 16 L23 17 L24 16 L23.5 18 L24 19 L23 18.5 L22 20 L21 18.5 L20 19 L20.5 18 L20 16 L21 17 Z" fill="#ffd700"/>
-                </svg>
+              <div className="w-24 h-24 flex items-center justify-center mb-6 mx-auto">
+                <Image
+                  src="/images/icon_camion.png"
+                  alt="Camion de livraison"
+                  width={75}
+                  height={75}
+                  className="object-contain"
+                />
               </div>
               <h3 className="font-bold text-gray-900 mb-2 text-lg">3. Recevez</h3>
               <p className="text-gray-600 font-medium">Des stickers uniques arrivent chez vous</p>
