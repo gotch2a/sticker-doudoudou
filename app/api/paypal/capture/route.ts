@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { OrderService } from '@/lib/supabase'
 import { sendOrderConfirmationEmails } from '@/lib/email'
+import { EmailService } from '@/lib/emailService'
+import { AuthService } from '@/lib/authService'
 
 // Configuration PayPal
 const PAYPAL_BASE_URL = process.env.NODE_ENV === 'production' 
@@ -71,13 +73,17 @@ export async function POST(request: NextRequest) {
     
     console.log('✅ Statut de commande mis à jour:', orderNumber)
     
-    // Envoi des emails de confirmation après paiement validé
+    // ============================================================================
+    // 📧 ENVOI DES EMAILS APRÈS PAIEMENT VALIDÉ
+    // ============================================================================
+    
     console.log('📧 Envoi des emails de confirmation après paiement...')
     try {
       const baseUrl = process.env.NODE_ENV === 'production' 
         ? 'https://votre-domaine.com' 
         : 'http://localhost:3000'
       
+      // 1. Email de confirmation standard (client + artiste)
       const emailResults = await sendOrderConfirmationEmails({
         orderNumber: order.order_number,
         petName: order.pet_name,
@@ -93,7 +99,75 @@ export async function POST(request: NextRequest) {
         discountAmount: order.discount_amount || 0
       })
       
-      console.log('📧 Résultats envoi emails:', emailResults)
+      console.log('📧 Emails confirmation envoyés:', emailResults)
+      
+      // 2. Email de bienvenue avec identifiants (si nouveau compte créé)
+      console.log('🔐 Vérification du statut du compte utilisateur...')
+      
+      const user = await AuthService.getUserByEmail(order.client_email)
+      
+      if (user) {
+        // Récupérer les informations du profil utilisateur
+        const { createClient } = await import('@supabase/supabase-js')
+        const supabaseAdmin = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          {
+            auth: {
+              autoRefreshToken: false,
+              persistSession: false
+            }
+          }
+        )
+        
+        if (supabaseAdmin) {
+          const { data: profile } = await supabaseAdmin
+            .from('user_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+          
+          // Vérifier si le compte a été créé récemment (dans les 30 minutes)
+          const accountCreatedRecently = profile?.account_created_at && 
+            (new Date().getTime() - new Date(profile.account_created_at).getTime()) < 30 * 60 * 1000
+          
+          // Vérifier si c'est le premier order du compte (compte créé depuis cette commande)
+          const isFirstOrder = profile?.account_created_from_order === order.order_number
+          
+          if (accountCreatedRecently && isFirstOrder) {
+            console.log('🎉 Nouveau compte détecté, envoi email de bienvenue...')
+            
+            // Générer un nouveau mot de passe temporaire (l'ancien n'est plus accessible)
+            const temporaryPassword = Math.random().toString(36).slice(-12) + '!'
+            
+            // Mettre à jour le mot de passe dans Supabase Auth
+            await supabaseAdmin.auth.admin.updateUserById(user.id, {
+              password: temporaryPassword
+            })
+            
+            // Envoyer l'email de bienvenue
+            const welcomeResult = await EmailService.sendWelcomeEmail({
+              email: order.client_email,
+              firstName: profile.first_name,
+              lastName: profile.last_name,
+              temporaryPassword: temporaryPassword,
+              orderNumber: order.order_number,
+              loginUrl: `${baseUrl}/auth/login`
+            })
+            
+            if (welcomeResult.success) {
+              console.log('✅ Email de bienvenue envoyé avec succès')
+            } else {
+              console.error('❌ Erreur envoi email de bienvenue:', welcomeResult.error)
+            }
+          } else {
+            console.log('👤 Compte existant, pas d\'email de bienvenue nécessaire')
+          }
+        }
+      } else {
+        console.warn('⚠️ Utilisateur non trouvé pour l\'email:', order.client_email)
+      }
+      
     } catch (emailError) {
       console.error('❌ Erreur envoi emails:', emailError)
       // Ne pas faire échouer la capture pour un problème d'email

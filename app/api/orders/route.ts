@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { OrderService } from '@/lib/supabase'
 import { serverProductSettingsService } from '@/lib/serverProductSettings'
 import { serverShippingSettingsService } from '@/lib/serverShippingSettings'
+import { AuthService, AuthUtils } from '@/lib/authService'
 // import { sendOrderConfirmationEmails } from '@/lib/email' // ✅ Emails envoyés depuis /api/paypal/capture
 
 // Configuration PayPal
@@ -161,6 +162,70 @@ export async function POST(request: NextRequest) {
     })
 
     console.log('✅ Commande créée en base:', newOrder.order_number, 'Total:', newOrder.total_amount, '€')
+
+    // ============================================================================
+    // 🔐 CRÉATION AUTOMATIQUE DU COMPTE UTILISATEUR
+    // ============================================================================
+    
+    console.log('🔐 Début processus création compte automatique...')
+    
+    // Extraire prénom et nom depuis childName (optionnel)
+    const { firstName, lastName } = AuthUtils.parseFullName(orderData.childName)
+    
+    // Préparer les données utilisateur
+    const userData = {
+      email: orderData.email,
+      firstName: firstName,
+      lastName: lastName,
+      phone: '', // Sera ajouté dans une version future
+      address: orderData.address,
+      city: orderData.city,
+      postalCode: orderData.postalCode,
+      orderNumber: newOrder.order_number
+    }
+    
+    // Créer le compte automatiquement
+    const authResult = await AuthService.createUserFromOrder(userData)
+    
+    if (authResult.success && authResult.userId) {
+      console.log('✅ Compte utilisateur créé/trouvé:', authResult.userId)
+      
+      // Lier la commande à l'utilisateur
+      const linkSuccess = await AuthService.linkOrderToUser(newOrder.order_number, authResult.userId)
+      
+      if (linkSuccess) {
+        console.log('✅ Commande liée au compte utilisateur')
+        
+        // Enregistrer le doudou pour cet utilisateur
+        const doudouSuccess = await AuthService.registerUserDoudou(
+          authResult.userId,
+          newOrder.order_number,
+          orderData.petName,
+          orderData.animalType,
+          orderData.photo
+        )
+        
+        if (doudouSuccess) {
+          console.log('✅ Doudou enregistré pour l\'utilisateur')
+        }
+        
+        // Mettre à jour les statistiques utilisateur
+        await AuthService.updateUserStats(
+          authResult.userId, 
+          totalAmount, 
+          orderData.discountAmount || 0
+        )
+        
+        console.log('✅ Statistiques utilisateur mises à jour')
+        
+      } else {
+        console.warn('⚠️ Impossible de lier la commande au compte utilisateur')
+      }
+      
+    } else {
+      console.warn('⚠️ Création compte automatique échouée:', authResult.error)
+      // La commande continue même si la création de compte échoue
+    }
 
     // Ajouter les articles à la commande dans order_articles
     console.log('📦 Ajout des articles à la commande...')

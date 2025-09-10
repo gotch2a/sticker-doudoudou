@@ -7,7 +7,6 @@ import {
   Upload, 
   ArrowLeft,
   ArrowRight,
-  Heart,
   AlertCircle,
   Check
 } from 'lucide-react'
@@ -15,6 +14,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { usePayPal } from '@/hooks/usePayPal'
 import { shippingSettingsService } from '@/lib/shippingSettings'
+import { useSmartPricing, usePricingUtils } from '@/hooks/useSmartPricing'
+import { DiscountNotification } from '@/components/ui/DiscountBadge'
 
 interface FormData {
   photo: File | null
@@ -34,6 +35,14 @@ interface FormData {
 export default function CommandePage() {
   const router = useRouter()
   const { createOrder, isLoading: paypalLoading } = usePayPal()
+  const { 
+    pricing, 
+    loading: pricingLoading,
+    hasDiscount,
+    calculatePriceDebounced,
+    reset: resetPricing
+  } = useSmartPricing()
+  const { formatPrice } = usePricingUtils()
   const [formData, setFormData] = useState<FormData>({
     photo: null,
     petName: '',
@@ -146,6 +155,10 @@ export default function CommandePage() {
         if (uploadResponse.ok) {
           const uploadResult = await uploadResponse.json()
           photoFileName = uploadResult.fileName
+        } else {
+          const errorText = await uploadResponse.text()
+          console.error('❌ Erreur upload photo:', errorText)
+          throw new Error(`Upload échoué: ${uploadResponse.status}`)
         }
       }
 
@@ -166,8 +179,8 @@ export default function CommandePage() {
       
       router.push(`/pre-commande?${params.toString()}`)
     } catch (error) {
-      console.error('Erreur:', error)
-      setErrors({ submit: 'Une erreur est survenue. Veuillez réessayer.' })
+      console.error('❌ Erreur:', error)
+      setErrors({ submit: `Une erreur est survenue: ${error instanceof Error ? error.message : 'Erreur inconnue'}` })
     } finally {
       setIsLoading(false)
     }
@@ -181,7 +194,9 @@ export default function CommandePage() {
   const [pricePerSheet, setPricePerSheet] = useState(12.90)
   const basePrice = 1 * pricePerSheet // Toujours 1 planche à cette étape
   
-  const totalPrice = basePrice + shippingCost
+  // Prix intelligent ou prix standard
+  const displayPrice = pricing?.finalPrice || (basePrice + shippingCost)
+  const totalPrice = displayPrice
 
   // Charger le prix dynamique au montage
   useEffect(() => {
@@ -202,6 +217,32 @@ export default function CommandePage() {
     loadPrice()
   }, [])
 
+  // TEMPORAIREMENT DÉSACTIVÉ - Calculer le prix intelligent quand les données changent
+  // useEffect(() => {
+  //   if (formData.email && formData.petName && formData.animalType) {
+  //     console.log('🧮 Recalcul prix intelligent...')
+      
+  //     calculatePriceDebounced({
+  //       email: formData.email,
+  //       petName: formData.petName,
+  //       animalType: formData.animalType,
+  //       numberOfSheets: formData.numberOfSheets,
+  //       photoUrl: photoPreview || undefined
+  //     })
+  //   } else {
+  //     // Réinitialiser le pricing si données insuffisantes
+  //     resetPricing()
+  //   }
+  // }, [
+  //   formData.email, 
+  //   formData.petName, 
+  //   formData.animalType, 
+  //   formData.numberOfSheets,
+  //   photoPreview,
+  //   calculatePriceDebounced,
+  //   resetPricing
+  // ])
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-primary-50 via-warm-50 to-sage-50">
       <div className="max-w-2xl mx-auto px-4 py-8">
@@ -218,6 +259,21 @@ export default function CommandePage() {
             <p className="text-gray-600">Étape 1 sur 3</p>
           </div>
         </div>
+
+        {/* TEMPORAIREMENT DÉSACTIVÉ - Notification de réduction */}
+        {/* {hasDiscount && pricing && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <DiscountNotification
+              discount={pricing.discount}
+              petName={formData.petName}
+              savingsAmount={pricing.savingsAmount}
+            />
+          </motion.div>
+        )} */}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Upload Photo */}
@@ -507,23 +563,75 @@ export default function CommandePage() {
             transition={{ delay: 0.4 }}
             className="bg-white rounded-2xl p-6 shadow-lg"
           >
+            {/* Affichage des prix avec tarification intelligente */}
             <div className="space-y-2 mb-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-700">Planche de stickers personnalisés</span>
-                <span className="font-medium">{basePrice.toFixed(2)}€</span>
+                <div className="flex items-center gap-2">
+                  {pricing && hasDiscount ? (
+                    <>
+                      <span className="text-sm text-gray-400 line-through">
+                        {pricing.priceBreakdown.basePrice + pricing.priceBreakdown.discountAmount}€
+                      </span>
+                      <span className="font-medium text-green-600">
+                        {pricing.priceBreakdown.basePrice.toFixed(2)}€
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-medium">{basePrice.toFixed(2)}€</span>
+                  )}
+                </div>
               </div>
+              
+              {/* Ligne de réduction si applicable */}
+              {pricing && hasDiscount && (
+                <div className="flex justify-between items-center text-green-600">
+                  <span className="text-sm flex items-center gap-1">
+                    🎉 {pricing.discount.reason}
+                  </span>
+                  <span className="text-sm font-medium">
+                    -{pricing.discount.amount.toFixed(2)}€
+                  </span>
+                </div>
+              )}
+              
               <div className="flex justify-between items-center">
                 <span className="text-gray-700 flex items-center gap-2">
                   🚚 Frais de livraison
                   <span className="text-xs text-gray-500">({shippingReason})</span>
                 </span>
-                <span className="font-medium">{shippingCost.toFixed(2)}€</span>
+                <span className="font-medium">
+                  {pricing ? pricing.priceBreakdown.shippingPrice.toFixed(2) : shippingCost.toFixed(2)}€
+                </span>
               </div>
             </div>
+            
             <div className="flex justify-between items-center pt-4 border-t-2 border-gray-200">
               <span className="text-lg font-semibold text-gray-900">Total</span>
-              <span className="text-2xl font-bold text-primary-600">{totalPrice.toFixed(2)}€</span>
+              <div className="text-right">
+                {pricing && hasDiscount && (
+                  <div className="text-sm text-gray-400 line-through">
+                    {pricing.originalPrice.toFixed(2)}€
+                  </div>
+                )}
+                <span className={`text-2xl font-bold ${hasDiscount ? 'text-green-600' : 'text-primary-600'}`}>
+                  {totalPrice.toFixed(2)}€
+                </span>
+                {pricing && hasDiscount && (
+                  <div className="text-xs text-green-600 font-medium">
+                    Économie: {pricing.savingsAmount.toFixed(2)}€
+                  </div>
+                )}
+              </div>
             </div>
+            
+            {/* Indicateur de calcul en cours */}
+            {pricingLoading && (
+              <div className="flex items-center justify-center gap-2 mt-3 text-sm text-gray-500">
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin"></div>
+                Calcul du meilleur prix...
+              </div>
+            )}
             
             <div className="space-y-4 mt-6">
               <label className="flex items-start gap-3 cursor-pointer">
@@ -553,6 +661,16 @@ export default function CommandePage() {
           </motion.div>
 
           {/* Submit Button */}
+          {/* Affichage erreur de soumission */}
+          {errors.submit && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-sm">{errors.submit}</span>
+              </div>
+            </div>
+          )}
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
