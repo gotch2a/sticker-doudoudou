@@ -75,17 +75,17 @@ module.exports = nextConfig
 
 ---
 
-## ⚡ DÉPLOIEMENT VERCEL (RECOMMANDÉ) {#vercel}
+## ⚡ DÉPLOIEMENT RAILWAY (RECOMMANDÉ) {#railway}
 
-### Pourquoi Vercel ?
+### Pourquoi Railway ?
 
 ✅ **Avantages :**
+- **Seulement 60€/an** (vs 240€/an pour Vercel Pro)
 - Déploiement automatique depuis Git
-- CDN global intégré  
+- SSL automatique et domaine custom  
 - Optimisations Next.js natives
-- SSL automatique
-- Preview deployments
-- **Gratuit** jusqu'à 100GB de bande passante
+- Interface simple comme Vercel
+- **Plan gratuit** pour commencer (5$/mois de crédit)
 
 ### Procédure complète :
 
@@ -97,14 +97,14 @@ git commit -m "🚀 Préparation déploiement production"
 git push origin main
 ```
 
-#### 2. Configuration Vercel
-1. Aller sur [vercel.com](https://vercel.com)
-2. "Import Project" → Connecter GitHub
-3. Sélectionner le repository `Sticker-DOUDOU`
-4. **Framework Preset :** Next.js (détecté automatiquement)
+#### 2. Configuration Railway
+1. Aller sur [railway.app](https://railway.app)
+2. "Start a New Project" → Se connecter avec GitHub  
+3. "Deploy from GitHub" → Sélectionner le repository `Sticker-DOUDOU`
+4. **Framework :** Next.js (détecté automatiquement)
 
 #### 3. Variables d'environnement
-Dans Vercel Dashboard → Settings → Environment Variables :
+Dans Railway Dashboard → Variables :
 
 ```
 NEXT_PUBLIC_SUPABASE_URL → votre_url_supabase
@@ -116,8 +116,8 @@ PAYPAL_CLIENT_SECRET → votre_paypal_secret
 ```
 
 #### 4. Déploiement
-- Vercel déploie automatiquement à chaque push
-- URL temporaire : `https://sticker-doudou-xxx.vercel.app`
+- Railway déploie automatiquement à chaque push
+- URL temporaire : `https://sticker-doudou-xxx.railway.app`
 
 ---
 
@@ -129,23 +129,23 @@ PAYPAL_CLIENT_SECRET → votre_paypal_secret
 1. Panel Hostinger → Domaines → tagadou.fr
 2. DNS / Nameservers → Gérer les enregistrements DNS
 
-#### 2. Configuration DNS Vercel
+#### 2. Configuration DNS Railway
 ```
-Type: A
+Type: CNAME
 Nom: @
-Valeur: 76.76.19.61 (IP Vercel)
+Valeur: xxxxx.railway.app (fourni par Railway)
 TTL: 3600
 
 Type: CNAME  
 Nom: www
-Valeur: cname.vercel-dns.com
+Valeur: xxxxx.railway.app
 TTL: 3600
 ```
 
-#### 3. Dans Vercel Dashboard
-1. Settings → Domains
+#### 3. Dans Railway Dashboard
+1. Settings → Domains → Custom Domain
 2. Ajouter `tagadou.fr` et `www.tagadou.fr`
-3. Vercel configure automatiquement le SSL
+3. Railway configure automatiquement le SSL
 
 ### Temps de propagation : 24-48h maximum
 
@@ -199,9 +199,9 @@ git checkout -b feature/nouvelle-fonction
 # 2. Développer
 # ... code ...
 
-# 3. Preview deployment (Vercel)  
+# 3. Preview deployment (Railway)  
 git push origin feature/nouvelle-fonction
-# → Vercel crée automatiquement une URL de preview
+# → Railway crée automatiquement une URL de preview
 
 # 4. Tests et validation
 # Test sur l'URL de preview
@@ -248,10 +248,10 @@ git push origin main
 
 #### Coûts mensuels estimés :
 ```
-Vercel Pro (si dépassement) : 20€/mois
+Railway Pro : 5€/mois (60€/an)
 Hostinger domaine : 8€/an  
 Supabase Pro : 20€/mois (si croissance)
-Total : ~25€/mois
+Total : ~6€/mois (première année)
 ```
 
 ### Sauvegardes et sécurité :
@@ -262,7 +262,7 @@ Total : ~25€/mois
 - **Images :** Supabase Storage (redondant)
 
 #### Sécurité :
-- SSL automatique (Vercel)
+- SSL automatique (Railway)
 - Row Level Security (Supabase)  
 - Variables d'environnement sécurisées
 - Headers de sécurité (CSP, HSTS)
@@ -274,11 +274,11 @@ Total : ~25€/mois
 ### Cette semaine :
 1. ✅ Finaliser le développement local
 2. 🔧 Configurer les variables d'environnement de prod  
-3. 📱 Créer compte Vercel
+3. 📱 Créer compte Railway (gratuit)
 4. 🌐 Configurer DNS sur Hostinger
 
 ### Semaine suivante :
-1. 🚀 Premier déploiement sur Vercel
+1. 🚀 Premier déploiement sur Railway  
 2. 🔗 Configuration domaine tagadou.fr
 3. 🧪 Tests complets en production
 4. 📊 Mise en place du monitoring
