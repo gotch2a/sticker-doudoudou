@@ -1,0 +1,72 @@
+# 🐳 Dockerfile Production Optimisé - TAGADOU.FR
+# Multi-stage build pour performance maximale
+
+# Stage 1: Build dependencies
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat curl
+
+WORKDIR /app
+
+# Optimisation cache des dépendances
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+# Stage 2: Build application
+FROM node:20-alpine AS builder
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Build optimisé
+ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV production
+
+RUN npm run build
+
+# Stage 3: Production runtime
+FROM node:20-alpine AS production
+RUN apk add --no-cache curl dumb-init
+
+# Création utilisateur non-root pour sécurité
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+WORKDIR /app
+
+# Copy built application
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/package*.json ./
+COPY --from=builder --chown=nextjs:nodejs /app/next.config.js ./
+
+# Copy standalone build
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Création dossiers nécessaires
+RUN mkdir -p /app/uploads /app/logs
+RUN chown -R nextjs:nodejs /app/uploads /app/logs
+
+# Configuration optimale production
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+
+# Optimisations Node.js
+ENV NODE_OPTIONS="--max-old-space-size=1024"
+
+USER nextjs
+
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Utilisation dumb-init pour gestion signaux
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "server.js"]

@@ -1,0 +1,194 @@
+# 🐳 Docker Compose Production - TAGADOU.FR
+# Configuration optimisée pour production avec auto-scaling et monitoring
+
+version: '3.8'
+
+services:
+  # Application Next.js principale
+  tagadou-app:
+    build: 
+      context: .
+      dockerfile: Dockerfile.production
+      target: production
+    container_name: tagadou-app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - NEXT_PUBLIC_PAYPAL_CLIENT_ID=${NEXT_PUBLIC_PAYPAL_CLIENT_ID}
+      - PAYPAL_CLIENT_SECRET=${PAYPAL_CLIENT_SECRET}
+      - NEXT_PUBLIC_PAYPAL_ENVIRONMENT=production
+      - NEXT_PUBLIC_BASE_URL=https://tagadou.fr
+      - VIRTUAL_HOST=tagadou.fr,www.tagadou.fr
+      - LETSENCRYPT_HOST=tagadou.fr,www.tagadou.fr
+      - LETSENCRYPT_EMAIL=admin@tagadou.fr
+    expose:
+      - "3000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+    networks:
+      - tagadou-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx Reverse Proxy avec SSL automatique
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:alpine
+    container_name: tagadou-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - nginx-certs:/etc/nginx/certs:ro
+      - nginx-vhost:/etc/nginx/vhost.d
+      - nginx-html:/usr/share/nginx/html
+      - ./nginx-custom.conf:/etc/nginx/conf.d/custom.conf:ro
+    networks:
+      - tagadou-network
+    environment:
+      - DEFAULT_HOST=tagadou.fr
+    labels:
+      - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy"
+
+  # Let's Encrypt SSL automatique
+  letsencrypt:
+    image: nginxproxy/acme-companion
+    container_name: tagadou-ssl
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - nginx-certs:/etc/nginx/certs
+      - nginx-vhost:/etc/nginx/vhost.d
+      - nginx-html:/usr/share/nginx/html
+      - acme:/etc/acme.sh
+    environment:
+      - NGINX_PROXY_CONTAINER=tagadou-nginx
+      - DEFAULT_EMAIL=admin@tagadou.fr
+    networks:
+      - tagadou-network
+    depends_on:
+      - nginx-proxy
+
+  # Redis pour cache et sessions
+  redis:
+    image: redis:7-alpine
+    container_name: tagadou-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-tagadou2024}
+    volumes:
+      - redis-data:/data
+    networks:
+      - tagadou-network
+    sysctls:
+      - net.core.somaxconn=65535
+
+  # Monitoring et auto-scaling
+  watchtower:
+    image: containrrr/watchtower
+    container_name: tagadou-watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 300 --cleanup --include-stopped --include-restarting
+    environment:
+      - WATCHTOWER_NOTIFICATIONS=email
+      - WATCHTOWER_NOTIFICATION_EMAIL_FROM=watchtower@tagadou.fr
+      - WATCHTOWER_NOTIFICATION_EMAIL_TO=${ADMIN_EMAIL}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_USER=${RESEND_API_KEY}
+    networks:
+      - tagadou-network
+
+  # Métriques et monitoring
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    container_name: tagadou-cadvisor
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - "8080:8080"
+    networks:
+      - tagadou-network
+    devices:
+      - /dev/kmsg
+
+  # Backup automatique
+  backup:
+    image: alpine:latest
+    container_name: tagadou-backup
+    restart: unless-stopped
+    volumes:
+      - ./:/app
+      - backup-storage:/backups
+      - ./scripts/backup-auto.sh:/backup-auto.sh
+    environment:
+      - BACKUP_SCHEDULE=0 2 * * *  # 2h du matin tous les jours
+    command: sh -c "chmod +x /backup-auto.sh && crond -f"
+    networks:
+      - tagadou-network
+
+  # Logs centralisés  
+  logs-collector:
+    image: fluent/fluent-bit:2.2
+    container_name: tagadou-logs
+    restart: unless-stopped
+    volumes:
+      - ./logs:/fluent-bit/logs
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+    networks:
+      - tagadou-network
+    depends_on:
+      - tagadou-app
+
+networks:
+  tagadou-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  nginx-certs:
+    driver: local
+  nginx-vhost:
+    driver: local  
+  nginx-html:
+    driver: local
+  acme:
+    driver: local
+  redis-data:
+    driver: local
+  backup-storage:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/tagadou-backups
+
+# Configuration pour auto-scaling (utilisé par scripts externes)
+x-scaling-config:
+  cpu_threshold_up: 80
+  cpu_threshold_down: 20
+  memory_threshold_up: 85
+  memory_threshold_down: 30
+  min_replicas: 1
+  max_replicas: 5
+  scale_up_cooldown: 300  # 5 minutes
+  scale_down_cooldown: 600  # 10 minutes
