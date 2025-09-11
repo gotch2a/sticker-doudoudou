@@ -321,7 +321,7 @@ export default function Home() {
             </div>
             
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight" style={{color: '#4B5563'}}>
-              <span className="text-primary-600 block">
+              <span className="text-gray-600 block">
                 Mon doudou à coller partout
               </span>
             </h1>
