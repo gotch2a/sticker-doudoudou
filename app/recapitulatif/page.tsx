@@ -59,7 +59,7 @@ export default function RecapitulatifPage() {
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Récapitulatif</h1>
+            <h1 className="text-2xl font-bold text-gray-600">Récapitulatif</h1>
             <p className="text-gray-600">Étape 2 sur 3</p>
           </div>
         </div>

@@ -120,7 +120,7 @@ export default function ProfilePage() {
           >
             ← Retour
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-600">
             Paramètres du profil
           </h1>
         </div>
@@ -128,7 +128,7 @@ export default function ProfilePage() {
         {/* Informations utilisateur */}
         <div className="bg-white rounded-2xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-gray-600 flex items-center gap-2">
               <User className="w-5 h-5 text-primary-500" />
               Informations personnelles
             </h2>
@@ -234,7 +234,7 @@ export default function ProfilePage() {
 
         {/* Statistiques (lecture seule) */}
         <div className="bg-white rounded-2xl p-6 shadow-lg mt-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <h2 className="text-xl font-semibold text-gray-600 mb-4">
             Statistiques du compte
           </h2>
           

@@ -320,7 +320,7 @@ export default function Home() {
               </div>
             </div>
             
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight" style={{color: '#353535'}}>
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight" style={{color: '#4B5563'}}>
               <span className="text-primary-600 block">
                 Mon doudou à coller partout
               </span>
@@ -355,7 +355,7 @@ export default function Home() {
                   className="object-contain"
                 />
               </div>
-              <h3 className="font-bold text-gray-900 mb-2 text-lg">1. Photographiez</h3>
+              <h3 className="font-bold text-gray-600 mb-2 text-lg">1. Photographiez</h3>
               <p className="text-gray-600 font-medium">une photo du doudou, seule si possible</p>
             </div>
 
@@ -369,7 +369,7 @@ export default function Home() {
                   className="object-contain"
                 />
               </div>
-              <h3 className="font-bold text-gray-900 mb-2 text-lg">2. Personnalisez</h3>
+              <h3 className="font-bold text-gray-600 mb-2 text-lg">2. Personnalisez</h3>
               <p className="text-gray-600 font-medium">Ajoutez le nom et quelques détails</p>
             </div>
 
@@ -383,7 +383,7 @@ export default function Home() {
                   className="object-contain"
                 />
               </div>
-              <h3 className="font-bold text-gray-900 mb-2 text-lg">3. Recevez</h3>
+              <h3 className="font-bold text-gray-600 mb-2 text-lg">3. Recevez</h3>
               <p className="text-gray-600 font-medium">Des stickers uniques arrivent chez vous</p>
             </div>
           </div>
@@ -394,7 +394,7 @@ export default function Home() {
       <section className="py-16 bg-white">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-600 mb-4">
               🎨 La magie TAGADOU en action
             </h2>
             <p className="text-gray-600 text-lg">
@@ -410,7 +410,7 @@ export default function Home() {
       <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-600 mb-4">
               Pourquoi les enfants adorent
             </h2>
             <p className="text-gray-600">
@@ -456,7 +456,7 @@ export default function Home() {
                 className="text-center animate-fade-in"
               >
                 <div className="text-4xl mb-4">{feature.emoji}</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-600 mb-2">
                   {feature.title}
                 </h3>
                 <p className="text-gray-600 text-sm">

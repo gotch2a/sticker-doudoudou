@@ -264,7 +264,7 @@ export default function DashboardPage() {
         {/* En-tête */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gray-600">
               Bonjour {user?.first_name} ! 👋
             </h1>
             <p className="text-gray-600 mt-1">
@@ -303,7 +303,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Commandes</p>
-                <p className="text-2xl font-bold text-gray-900">{user?.total_orders}</p>
+                <p className="text-2xl font-bold text-gray-600">{user?.total_orders}</p>
               </div>
             </div>
           </motion.div>
@@ -320,7 +320,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Doudous créés</p>
-                <p className="text-2xl font-bold text-gray-900">{doudous.length}</p>
+                <p className="text-2xl font-bold text-gray-600">{doudous.length}</p>
               </div>
             </div>
           </motion.div>
@@ -337,7 +337,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total dépensé</p>
-                <p className="text-2xl font-bold text-gray-900">{user?.total_spent.toFixed(2)}€</p>
+                <p className="text-2xl font-bold text-gray-600">{user?.total_spent.toFixed(2)}€</p>
               </div>
             </div>
           </motion.div>
@@ -369,7 +369,7 @@ export default function DashboardPage() {
             transition={{ delay: 0.4 }}
             className="bg-white rounded-2xl p-6 shadow-lg"
           >
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-gray-600 mb-4 flex items-center gap-2">
               <Heart className="w-5 h-5 text-purple-500" />
               Mes doudous
             </h2>
@@ -379,7 +379,7 @@ export default function DashboardPage() {
                 <div key={doudou.id} className="border border-gray-200 rounded-xl p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-semibold text-gray-900">{doudou.pet_name}</h3>
+                      <h3 className="font-semibold text-gray-600">{doudou.pet_name}</h3>
                       <p className="text-sm text-gray-600">{doudou.animal_type}</p>
                       <p className="text-xs text-gray-500 mt-1">
                         {doudou.total_orders} commande{doudou.total_orders > 1 ? 's' : ''} • 
@@ -425,7 +425,7 @@ export default function DashboardPage() {
             transition={{ delay: 0.5 }}
             className="bg-white rounded-2xl p-6 shadow-lg"
           >
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-gray-600 mb-4 flex items-center gap-2">
               <Package className="w-5 h-5 text-blue-500" />
               Commandes récentes
             </h2>
@@ -447,7 +447,7 @@ export default function DashboardPage() {
                     <span className="text-gray-500">
                       {formatDate(order.created_at)}
                     </span>
-                    <span className="font-semibold text-gray-900">
+                    <span className="font-semibold text-gray-600">
                       {order.total_amount.toFixed(2)}€
                     </span>
                   </div>

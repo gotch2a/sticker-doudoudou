@@ -215,7 +215,7 @@ export default function ConfirmationPage() {
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>
           
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-600 mb-4">
             Commande confirmée ! 🎉
           </h1>
           
@@ -236,7 +236,7 @@ export default function ConfirmationPage() {
         >
           <div className="text-center mb-6">
             <div className="text-6xl mb-4">✨</div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl font-semibold text-gray-600 mb-2">
               Merci pour votre confiance !
             </h2>
             <p className="text-gray-600">
@@ -256,7 +256,7 @@ export default function ConfirmationPage() {
 
           {/* Timeline */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900 mb-4">Prochaines étapes :</h3>
+            <h3 className="font-semibold text-gray-600 mb-4">Prochaines étapes :</h3>
             
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
@@ -335,7 +335,7 @@ export default function ConfirmationPage() {
         >
           <div className="text-center">
             <div className="text-3xl mb-3">💝</div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+            <h3 className="text-lg font-semibold text-gray-600 mb-2">
               Votre expérience nous intéresse !
             </h3>
             <p className="text-gray-600 mb-4">
@@ -357,7 +357,7 @@ export default function ConfirmationPage() {
             transition={{ delay: 1.2 }}
             className="bg-white rounded-2xl p-6 mb-8 shadow-lg"
           >
-            <h3 className="text-xl font-bold mb-4 text-gray-800">
+            <h3 className="text-xl font-bold mb-4 text-gray-600">
               📋 Récapitulatif de votre commande
             </h3>
             
@@ -399,7 +399,7 @@ export default function ConfirmationPage() {
 
               {/* Total */}
               <div className="flex items-center justify-between py-3 text-lg font-bold border-t-2 border-gray-300">
-                <span className="text-gray-800">Total payé :</span>
+                <span className="text-gray-600">Total payé :</span>
                 <span className="text-green-600">
                   {orderDetails.totalAmount.toFixed(2)}€
                 </span>

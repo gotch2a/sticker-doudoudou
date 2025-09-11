@@ -6,7 +6,7 @@ export default function Exemples() {
   return (
     <main className="max-w-6xl mx-auto px-4 py-8">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+        <h1 className="text-4xl font-bold text-gray-600 mb-4">
           Nos créations
         </h1>
         <p className="text-xl text-gray-600">
@@ -21,7 +21,7 @@ export default function Exemples() {
             <span className="text-gray-400">Exemple Doudou 1</span>
           </div>
           <div className="p-4">
-            <h3 className="font-semibold text-gray-900">Nounours Théo</h3>
+            <h3 className="font-semibold text-gray-600">Nounours Théo</h3>
             <p className="text-sm text-gray-600">Transformé en stickers colorés</p>
           </div>
         </div>
@@ -31,7 +31,7 @@ export default function Exemples() {
             <span className="text-gray-400">Exemple Doudou 2</span>
           </div>
           <div className="p-4">
-            <h3 className="font-semibold text-gray-900">Lapin Lila</h3>
+            <h3 className="font-semibold text-gray-600">Lapin Lila</h3>
             <p className="text-sm text-gray-600">Une création pleine de douceur</p>
           </div>
         </div>
@@ -41,7 +41,7 @@ export default function Exemples() {
             <span className="text-gray-400">Exemple Doudou 3</span>
           </div>
           <div className="p-4">
-            <h3 className="font-semibold text-gray-900">Éléphant Émile</h3>
+            <h3 className="font-semibold text-gray-600">Éléphant Émile</h3>
             <p className="text-sm text-gray-600">Des couleurs vives et joyeuses</p>
           </div>
         </div>

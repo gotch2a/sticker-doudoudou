@@ -13,7 +13,7 @@ export default function CGVPage() {
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-600">
             Conditions Générales de Vente
           </h1>
         </div>

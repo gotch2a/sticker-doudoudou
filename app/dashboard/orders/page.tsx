@@ -285,7 +285,7 @@ export default function OrdersPage() {
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Mes commandes</h1>
+            <h1 className="text-2xl font-bold text-gray-600">Mes commandes</h1>
             <p className="text-gray-600">{orders.length} commande{orders.length !== 1 ? 's' : ''} trouvée{orders.length !== 1 ? 's' : ''}</p>
           </div>
         </div>

@@ -56,7 +56,7 @@ module.exports = {
           300: '#faadad',  // 👈 VOTRE COULEUR (Maths)
           400: '#f87c7c',  // Rose vif
           500: '#f56565',  // Rose principal
-          600: '#f25422',  // Rose intense ⭐ PRINCIPAL
+          600: '#e53e3e',  // Rose intense ⭐ PRINCIPAL
           700: '#c53030',  // Rose foncé (hover)
           800: '#9c2626',  // Rose très foncé
           900: '#742a2a',  // Rose presque noir

@@ -13,7 +13,7 @@ export default function ConfidentialitePage() {
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-600">
             Politique de Confidentialité
           </h1>
         </div>

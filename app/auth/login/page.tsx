@@ -104,7 +104,7 @@ export default function LoginPage() {
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Se connecter</h1>
+            <h1 className="text-2xl font-bold text-gray-600">Se connecter</h1>
             <p className="text-gray-600">Accédez à votre espace Sticker DOUDOU</p>
           </div>
         </div>

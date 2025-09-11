@@ -328,7 +328,7 @@ export default function CommandePage() {
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Créer les stickers</h1>
+            <h1 className="text-2xl font-bold text-gray-600">Créer les stickers</h1>
             <p className="text-gray-600">Étape 1 sur 3</p>
           </div>
         </div>
@@ -355,7 +355,7 @@ export default function CommandePage() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-2xl p-6 shadow-lg"
           >
-            <label className="block text-lg font-semibold text-gray-900 mb-4">
+            <label className="block text-lg font-semibold text-gray-600 mb-4">
               📸 Photo du doudou
             </label>
             
@@ -395,7 +395,7 @@ export default function CommandePage() {
                 ) : (
                   <div className="text-center">
                     <Camera className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-lg font-medium text-gray-900 mb-2">
+                    <p className="text-lg font-medium text-gray-600 mb-2">
                       Ajoutez une photo du doudou
                     </p>
                     <p className="text-sm text-gray-500">
@@ -421,7 +421,7 @@ export default function CommandePage() {
             transition={{ delay: 0.1 }}
             className="bg-white rounded-2xl p-6 shadow-lg space-y-4"
           >
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold text-gray-600 mb-4">
               🧸 À propos du doudou
             </h2>
             
@@ -469,7 +469,7 @@ export default function CommandePage() {
             transition={{ delay: 0.2 }}
             className="bg-white rounded-2xl p-6 shadow-lg space-y-4"
           >
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold text-gray-600 mb-4">
               👶 Infos de livraison
             </h2>
             
@@ -658,7 +658,7 @@ export default function CommandePage() {
             transition={{ delay: 0.3 }}
             className="bg-white rounded-2xl p-6 shadow-lg space-y-4"
           >
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold text-gray-600 mb-4">
               ⚙️ Options
             </h2>
             
@@ -729,7 +729,7 @@ export default function CommandePage() {
             </div>
             
             <div className="flex justify-between items-center pt-4 border-t-2 border-gray-200">
-              <span className="text-lg font-semibold text-gray-900">Total</span>
+              <span className="text-lg font-semibold text-gray-600">Total</span>
               <div className="text-right">
                 {pricing && hasDiscount && (
                   <div className="text-sm text-gray-400 line-through">

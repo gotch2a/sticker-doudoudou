@@ -470,7 +470,7 @@ export default function PreCommandePage() {
               <Gift className="w-8 h-8 text-primary-600" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          <h1 className="text-3xl font-bold text-gray-600 mb-2">
             ✨ Complétez votre collection !
           </h1>
           <p className="text-lg text-gray-600 mb-4">
@@ -486,7 +486,7 @@ export default function PreCommandePage() {
 
         {/* Récapitulatif commande de base */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">
+          <h2 className="text-xl font-bold text-gray-600 mb-4">
             🛒 Votre commande actuelle
           </h2>
           <div className="flex items-center justify-between py-3 border-b border-gray-200">
@@ -507,7 +507,7 @@ export default function PreCommandePage() {
 
         {/* Produits d'upsell */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+          <h2 className="text-2xl font-bold text-gray-600 mb-6 text-center">
             🎁 Produits exclusifs disponibles
           </h2>
           
@@ -569,7 +569,7 @@ export default function PreCommandePage() {
                         <Icon className="w-6 h-6 text-primary-600" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg text-gray-800">{product.name}</h3>
+                        <h3 className="font-bold text-lg text-gray-600">{product.name}</h3>
                         <p className="text-sm text-gray-600">{product.description}</p>
                       </div>
                     </div>
@@ -635,7 +635,7 @@ export default function PreCommandePage() {
 
         {/* Récapitulatif final et total */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">
+          <h2 className="text-xl font-bold text-gray-600 mb-4">
             📋 Récapitulatif final
           </h2>
           
@@ -803,7 +803,7 @@ export default function PreCommandePage() {
 
           {/* Total */}
           <div className="flex items-center justify-between py-4 text-xl font-bold border-t-2 border-gray-300 mt-4">
-            <span className="text-gray-800">Total à payer :</span>
+            <span className="text-gray-600">Total à payer :</span>
             <span className="text-green-600 text-2xl">{finalTotalPrice.toFixed(2)}€</span>
           </div>
 
@@ -867,7 +867,7 @@ export default function PreCommandePage() {
 
         {/* Garanties */}
         <div className="mt-12 bg-white rounded-xl p-6 shadow-lg">
-          <h3 className="text-xl font-bold text-center mb-6 text-gray-800">
+          <h3 className="text-xl font-bold text-center mb-6 text-gray-600">
             🛡️ Nos Garanties
           </h3>
           <div className="grid md:grid-cols-3 gap-6 text-center">
@@ -875,21 +875,21 @@ export default function PreCommandePage() {
               <div className="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Heart className="w-6 h-6 text-green-600" />
               </div>
-              <h4 className="font-bold text-gray-800 mb-2">Qualité Premium</h4>
+              <h4 className="font-bold text-gray-600 mb-2">Qualité Premium</h4>
               <p className="text-sm text-gray-600">Matériaux de haute qualité, satisfaction garantie</p>
             </div>
             <div>
               <div className="bg-sage-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Sparkles className="w-6 h-6 text-sage-600" />
               </div>
-              <h4 className="font-bold text-gray-800 mb-2">Livraison Groupée</h4>
+              <h4 className="font-bold text-gray-600 mb-2">Livraison Groupée</h4>
               <p className="text-sm text-gray-600">Tout dans le même colis, économique et pratique</p>
             </div>
             <div>
               <div className="bg-primary-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Crown className="w-6 h-6 text-primary-600" />
               </div>
-              <h4 className="font-bold text-gray-800 mb-2">Offre Exclusive</h4>
+              <h4 className="font-bold text-gray-600 mb-2">Offre Exclusive</h4>
               <p className="text-sm text-gray-600">Prix spéciaux disponibles uniquement ici</p>
             </div>
           </div>

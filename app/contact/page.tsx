@@ -161,7 +161,7 @@ export default function Contact() {
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+        <h1 className="text-4xl font-bold text-gray-600 mb-4">
           Contactez-nous
         </h1>
         <p className="text-xl text-gray-600">
@@ -205,7 +205,7 @@ export default function Contact() {
       </div>
 
       <div className="bg-white rounded-xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        <h2 className="text-2xl font-bold text-gray-600 mb-6">
           Envoyez-nous un message
         </h2>
         
