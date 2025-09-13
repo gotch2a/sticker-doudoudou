@@ -197,7 +197,7 @@ export function useSmartPricing() {
     reset,
     
     // Utilitaires
-    hasDiscount: pricing?.discount.type !== 'none' && pricing?.discount.percentage > 0,
+    hasDiscount: pricing?.discount.type !== 'none' && (pricing?.discount.percentage || 0) > 0,
     discountMessage: pricing?.discount.reason || '',
     formattedOriginalPrice: pricing ? `${pricing.originalPrice.toFixed(2)}€` : '',
     formattedFinalPrice: pricing ? `${pricing.finalPrice.toFixed(2)}€` : '',
@@ -251,7 +251,8 @@ export function usePricingUtils() {
     const bgColor = {
       repeat_doudou: 'bg-green-100 text-green-800',
       upsell: 'bg-blue-100 text-blue-800',
-      loyalty: 'bg-purple-100 text-purple-800'
+      loyalty: 'bg-purple-100 text-purple-800',
+      none: 'bg-gray-100 text-gray-800'
     }[discount.type] || 'bg-gray-100 text-gray-800'
     
     return `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bgColor}`

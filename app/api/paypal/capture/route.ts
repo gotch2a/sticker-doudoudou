@@ -152,7 +152,8 @@ export async function POST(request: NextRequest) {
               lastName: profile.last_name,
               temporaryPassword: temporaryPassword,
               orderNumber: order.order_number,
-              loginUrl: `${baseUrl}/auth/login`
+              loginUrl: `${baseUrl}
+              /auth/login`
             })
             
             if (welcomeResult.success) {

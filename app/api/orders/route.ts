@@ -184,8 +184,8 @@ export async function POST(request: NextRequest) {
       } else {
         // Dernier recours : utiliser nom enfant
         const parsed = AuthUtils.parseFullName(orderData.childName)
-        firstName = parsed.firstName
-        lastName = parsed.lastName
+        firstName = parsed.firstName || 'Client'
+        lastName = parsed.lastName || 'TagaDou'
       }
     }
     

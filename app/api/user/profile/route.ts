@@ -175,7 +175,7 @@ export async function GET(request: NextRequest) {
       
       // Récupérer l'email depuis Auth
       try {
-        const { data: authData } = await supabaseAdmin.auth.admin.getUserById(userId)
+        const { data: authData } = await supabaseAdmin.auth.admin.getUserById(userId!)
         authEmail = authData.user?.email || profile.email
       } catch (authError) {
         console.warn('⚠️ Erreur récupération email auth:', authError)
